@@ -668,6 +668,54 @@
         .broken-cannon {
             animation: break-apart 0.3s ease-out forwards;
         }
+
+        .tutorial-step {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(44, 24, 16, 0.95);
+            border: 2px solid #8B4513;
+            padding: 1rem;
+            border-radius: 5px;
+            color: #FFD700;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+            min-width: 200px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .tutorial-step.active {
+            display: block;
+        }
+
+        .tutorial-highlight {
+            background-color: rgba(255, 255, 0, 0.2);
+            border: 2px dashed #FFD700;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        .warning-tooltip {
+            position: fixed;
+            background-color: rgba(231, 76, 60, 0.95);
+            border: 2px solid #c0392b;
+            padding: 0.8rem;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: fade-in 0.3s ease-out;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -810,6 +858,48 @@
         </div>
     </div>
 
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="close-button" onclick="closeInstructions()">×</button>
+            <h2 class="title" style="font-size: 1.5rem;">Instructies</h2>
+            
+            <div style="color: #FFD700; text-align: left; font-size: 0.8rem; line-height: 1.5;">
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Doel van het spel</h3>
+                <p>Bescherm de Aardappel Koning tegen de aanvallende vijanden! Plaats kanonnen strategisch om de vijanden tegen te houden voordat ze de koning bereiken.</p>
+                
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Hoe speel je</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0;">• Koop kanonnen uit de shop (rechts)</li>
+                    <li style="margin: 0.5rem 0;">• Plaats kanonnen langs het pad (niet op het pad)</li>
+                    <li style="margin: 0.5rem 0;">• Start de wave wanneer je klaar bent</li>
+                    <li style="margin: 0.5rem 0;">• Verdien munten voor elke verslagen vijand</li>
+                    <li style="margin: 0.5rem 0;">• Ontvang een bonus na elke wave</li>
+                </ul>
+
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Kanonnen</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0;">• Kanonnen hebben beperkte duurzaamheid</li>
+                    <li style="margin: 0.5rem 0;">• Kapotte kanonnen kunnen herbouwd worden</li>
+                    <li style="margin: 0.5rem 0;">• Kanonnen schieten automatisch op vijanden binnen bereik</li>
+                </ul>
+
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Vijanden</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0;">• Vijanden volgen het pad naar de koning</li>
+                    <li style="margin: 0.5rem 0;">• Elke vijand die de koning bereikt doet schade</li>
+                    <li style="margin: 0.5rem 0;">• De koning heeft een beperkte hoeveelheid HP</li>
+                </ul>
+
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Waves</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0;">• Elke wave wordt moeilijker</li>
+                    <li style="margin: 0.5rem 0;">• Overleef alle waves om te winnen</li>
+                    <li style="margin: 0.5rem 0;">• Je verliest als de koning geen HP meer heeft</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
         let soundEnabled = true;
         const modal = document.getElementById('settingsModal');
@@ -845,7 +935,11 @@
         }
 
         function showInstructions() {
-            console.log("Toon instructies...");
+            document.getElementById('instructionsModal').style.display = "flex";
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsModal').style.display = "none";
         }
 
         function showSettings() {
@@ -905,6 +999,12 @@
 
         function startWave() {
             if (isWaveInProgress) return;
+            
+            // Check voor actieve kanonnen
+            const activeCannons = document.querySelectorAll('.placed-cannon');
+            if (activeCannons.length === 0) {
+                return; // Alleen return, geen tooltip meer hier
+            }
             
             console.log(`Wave ${currentWave} gestart!`);
             isWaveInProgress = true;
@@ -1020,9 +1120,8 @@
         }
 
         function selectCannon() {
-            if (playerCoins < CANNON_COST || isWaveInProgress) {
-                return; // Doe niets als er niet genoeg coins zijn of wave bezig is
-            }
+            if (playerCoins < CANNON_COST) return;
+            
             selectedTower = 'cannon';
             preview.style.display = 'block';
             document.querySelectorAll('.shop-item').forEach(item => {
@@ -1446,7 +1545,7 @@
                 <div class="modal-content">
                     <h2 class="title" style="font-size: 1.5rem;">Herbouw Kanon</h2>
                     <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
-                        Wil je dit kanon herbouwen voor ${CANNON_REBUILD_COST} <span style="color: #FFD700;">●</span>?
+                        Wil je dit kanon herbouwen voor ${CANNON_REBUILD_COST} <span style="color: #FFD700;"></span>?
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
                         <button class="menu-button" onclick="rebuildCannon(this)" style="margin: 0.5rem;">Ja</button>
@@ -1650,6 +1749,51 @@
             // Sluit modal
             modal.remove();
         }
+
+        function showWarningTooltip(message) {
+            // Verwijder bestaande warning tooltips
+            removeWarningTooltip();
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'warning-tooltip';
+            tooltip.textContent = message;
+            document.body.appendChild(tooltip);
+            
+            // Update positie bij muisbeweging
+            function updatePosition(e) {
+                tooltip.style.left = (e.pageX + 15) + 'px';
+                tooltip.style.top = (e.pageY + 15) + 'px';
+            }
+            
+            document.addEventListener('mousemove', updatePosition);
+            
+            // Verwijder tooltip na 2 seconden
+            setTimeout(() => {
+                document.removeEventListener('mousemove', updatePosition);
+                removeWarningTooltip();
+            }, 2000);
+        }
+
+        function removeWarningTooltip() {
+            const existingTooltip = document.querySelector('.warning-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+        }
+
+        // Voeg deze event listeners toe aan het eind van het script
+        const waveButton = document.querySelector('.wave-button');
+
+        waveButton.addEventListener('mouseover', () => {
+            const activeCannons = document.querySelectorAll('.placed-cannon');
+            if (activeCannons.length === 0 && !isWaveInProgress) {
+                showWarningTooltip('Je hebt geen actieve kanonnen!');
+            }
+        });
+
+        waveButton.addEventListener('mouseout', () => {
+            removeWarningTooltip();
+        });
     </script>
 </body>
 </html> 
