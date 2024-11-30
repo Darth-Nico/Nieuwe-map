@@ -820,6 +820,29 @@
             background-color: rgba(231, 76, 60, 0.1);
             border-color: rgba(231, 76, 60, 0.3);
         }
+
+        /* Voeg deze CSS styles toe */
+        .shop-category {
+            color: #FFD700;
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #8B4513;
+        }
+
+        .shop-item.healing {
+            background: linear-gradient(to right, #5a5a5a, #2ecc71);
+        }
+
+        .shop-item.healing:hover {
+            background: linear-gradient(to right, #6a6a6a, #27ae60);
+        }
+
+        .shop-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
     </style>
 </head>
 <body>
@@ -922,6 +945,9 @@
     <button class="shop-toggle" onclick="toggleShop()">◀</button>
     <div class="shop-sidebar">
         <h2 style="color: #FFD700; font-size: 1.2rem; margin-bottom: 2rem;">Shop</h2>
+        
+        <!-- Bestaande kanonnen sectie -->
+        <div class="shop-category">Verdediging</div>
         <div class="shop-item" onclick="selectCannon('single')">
             <div style="width: 40px; height: 20px; background-color: #606060; position: relative; border: 2px solid #000; box-shadow: 0 0 0 2px #FFD700; background: linear-gradient(to bottom, #707070, #505050);">
                 <div style="position: absolute; width: 12px; height: 6px; background-color: #404040; top: 50%; left: 100%; transform: translateY(-50%); border: 1px solid #000;"></div>
@@ -940,6 +966,18 @@
             <div>
                 <div>Dubbel Kanon</div>
                 <div style="font-size: 0.8rem;">100 <span style="color: #FFD700;">●</span></div>
+            </div>
+        </div>
+
+        <!-- Nieuwe healing sectie -->
+        <div class="shop-category" style="margin-top: 2rem;">Koning Support</div>
+        <div class="shop-item healing" onclick="buyHealing()" style="margin-top: 1rem;">
+            <div style="width: 40px; height: 40px; background-color: rgba(46, 204, 113, 0.2); position: relative; border: 2px solid #2ecc71; display: flex; justify-content: center; align-items: center;">
+                <span style="color: #2ecc71; font-size: 1.5rem;">+</span>
+            </div>
+            <div>
+                <div>Genezing</div>
+                <div style="font-size: 0.8rem;">30 <span style="color: #FFD700;">●</span></div>
             </div>
         </div>
     </div>
@@ -1047,6 +1085,10 @@
         // Voeg deze variabele toe bij de andere globale variabelen
         let playerCoins = STARTING_COINS;
 
+        // Voeg deze constanten toe
+        const HEALING_COST = 30;
+        const HEALING_AMOUNT = 10;
+
         function startGame() {
             document.querySelector('.game-container').style.display = 'none';
             document.getElementById('gameView').style.display = 'block';
@@ -1114,6 +1156,16 @@
                 fillElement.style.backgroundColor = '#f1c40f'; // Geel
             } else {
                 fillElement.style.backgroundColor = '#e74c3c'; // Rood
+            }
+
+            // Update healing item status
+            const healingItem = document.querySelector('.shop-item.healing');
+            if (kingHealth >= 100) {
+                healingItem.classList.add('disabled');
+                healingItem.onclick = null; // Verwijder click handler
+            } else {
+                healingItem.classList.remove('disabled');
+                healingItem.onclick = buyHealing; // Herstel click handler
             }
         }
 
@@ -1239,6 +1291,20 @@
             document.querySelector('.shop-toggle').textContent = isShopOpen ? '▶' : '◀';
         }
 
+        // Voeg deze functie toe
+        function cancelPlacement() {
+            if (selectedTower) {
+                selectedTower = null;
+                preview.style.display = 'none';
+                gameMap.removeEventListener('mousemove', movePreview);
+                gameMap.removeEventListener('click', placeCannon);
+                document.querySelectorAll('.inventory-slot, .shop-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+            }
+        }
+
+        // Update de event listeners
         function selectCannon(type) {
             const cost = type === 'double' ? DOUBLE_CANNON_COST : CANNON_COST;
             if (playerCoins < cost) return;
@@ -1250,7 +1316,6 @@
             // Stel verschillende radius groottes in voor verschillende kanonnen
             const radiusSize = type === 'double' ? '160px' : '240px';
             
-            // Update preview HTML met alleen cannon-radius
             preview.innerHTML = `
                 <div class="cannon-radius" style="--radius-size: ${radiusSize};"></div>
                 <div class="preview-cannon">
@@ -1268,8 +1333,24 @@
             });
             event.currentTarget.classList.add('selected');
             
+            // Voeg event listeners toe
             gameMap.addEventListener('mousemove', movePreview);
             gameMap.addEventListener('click', placeCannon);
+            gameMap.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                cancelPlacement();
+            });
+            
+            // Voeg keyboard listener toe
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        // Voeg deze functie toe voor keyboard events
+        function handleKeyPress(e) {
+            if (e.key === 'Escape' && selectedTower) {
+                cancelPlacement();
+                document.removeEventListener('keydown', handleKeyPress);
+            }
         }
 
         function movePreview(e) {
@@ -1571,6 +1652,8 @@
             
             gameMap.removeEventListener('mousemove', movePreview);
             gameMap.removeEventListener('click', placeCannon);
+            gameMap.removeEventListener('contextmenu', cancelPlacement);
+            document.removeEventListener('keydown', handleKeyPress);
         }
 
         // Nieuwe functie voor wave completion
@@ -1662,6 +1745,8 @@
             // Verwijder eventuele event listeners
             gameMap.removeEventListener('mousemove', movePreview);
             gameMap.removeEventListener('click', placeCannon);
+            gameMap.removeEventListener('contextmenu', cancelPlacement);
+            document.removeEventListener('keydown', handleKeyPress);
         }
 
         function backToMenu() {
@@ -1673,12 +1758,30 @@
         const shopItems = document.querySelectorAll('.shop-item');
         shopItems.forEach(item => {
             item.addEventListener('mousemove', (e) => {
-                const isDouble = item === shopItems[1]; // Check of dit het tweede item is (double cannon)
+                const isDouble = item === shopItems[1]; // Check of dit het dubbele kanon is
+                const isHealing = item.classList.contains('healing'); // Check of dit het healing item is
                 tooltip.style.display = 'block';
                 tooltip.style.left = (e.pageX + 15) + 'px';
                 tooltip.style.top = (e.pageY + 15) + 'px';
                 
-                if (isDouble) {
+                if (isHealing) {
+                    tooltip.innerHTML = `
+                        <div class="tooltip-title">Genezing Stats</div>
+                        <div class="tooltip-stat">
+                            <span>Herstel:</span>
+                            <span>${HEALING_AMOUNT} HP</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Kosten:</span>
+                            <span>${HEALING_COST} <span style="color: #FFD700;">●</span></span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Effect:</span>
+                            <span>Direct</span>
+                        </div>
+                    `;
+                } else if (isDouble) {
+                    // Bestaande dubbel kanon tooltip
                     tooltip.innerHTML = `
                         <div class="tooltip-title">Dubbel Kanon Stats</div>
                         <div class="tooltip-stat">
@@ -1703,6 +1806,7 @@
                         </div>
                     `;
                 } else {
+                    // Bestaande enkel kanon tooltip
                     tooltip.innerHTML = `
                         <div class="tooltip-title">Kanon Stats</div>
                         <div class="tooltip-stat">
@@ -1711,11 +1815,11 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Vuursnelheid:</span>
-                            <span>0.8s</span>
+                            <span>0.4s</span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Bereik:</span>
-                            <span>100px</span>
+                            <span>120px</span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Duurzaamheid:</span>
@@ -2008,6 +2112,16 @@
         waveButton.addEventListener('mouseout', () => {
             removeWarningTooltip();
         });
+
+        // Voeg deze functie toe
+        function buyHealing() {
+            if (kingHealth >= 100) return; // Kan niet kopen als koning volle gezondheid heeft
+            if (playerCoins < HEALING_COST) return; // Kan niet kopen als niet genoeg munten
+
+            updateCoins(-HEALING_COST);
+            kingHealth = Math.min(100, kingHealth + HEALING_AMOUNT); // Voorkom dat health boven 100 gaat
+            updateKingHealth();
+        }
     </script>
 </body>
 </html> 
