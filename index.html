@@ -497,7 +497,8 @@
             height: 20px !important;
             margin: 0 !important;
             padding: 0 !important;
-            background-color: #606060 !important;
+            background: linear-gradient(to bottom, #707070, #505050) !important;
+            border: 2px solid #000 !important;
             z-index: 102;
             transform-origin: center center;
         }
@@ -571,6 +572,45 @@
 
         .enemy {
             position: relative;
+        }
+
+        .tooltip {
+            position: fixed;
+            background-color: rgba(44, 24, 16, 0.95);
+            border: 2px solid #8B4513;
+            padding: 1rem;
+            border-radius: 5px;
+            color: #FFD700;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+            min-width: 200px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.3rem 0;
+        }
+
+        .tooltip-title {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #FFD700;
+            padding-bottom: 0.3rem;
+        }
+
+        .shop-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .shop-toggle.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -647,7 +687,7 @@
         <!-- Game UI -->
         <div class="game-ui">
             <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
-                Coins: <span id="coinDisplay">150</span>
+                <span id="coinDisplay">150</span> <span style="color: #FFD700;">●</span>
             </div>
             <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
                 Wave: <span id="waveNumber">1</span>
@@ -664,7 +704,7 @@
                 <div>Vijanden verslagen: <span id="enemiesDefeatedStat">0</span></div>
                 <div>Vijanden doorgekomen: <span id="enemiesLeakedStat">0</span></div>
                 <div>Koning HP: <span id="kingHealthStat">100</span>/100</div>
-                <div>Coins verdiend (kills): <span id="coinsEarnedStat">0</span> <span style="color: #FFD700;">●</span></div>
+                <div>Verdiend: <span id="coinsEarnedStat">0</span> <span style="color: #FFD700;">●</span></div>
                 <div>Wave bonus: <span id="waveBonusStat">50</span> <span style="color: #FFD700;">●</span></div>
             </div>
             <button class="menu-button" style="margin-top: 1rem;" onclick="closeWaveCompletion()">Doorgaan</button>
@@ -675,10 +715,12 @@
     <div class="shop-sidebar">
         <h2 style="color: #FFD700; font-size: 1.2rem; margin-bottom: 2rem;">Shop</h2>
         <div class="shop-item" onclick="selectCannon()">
-            <div style="width: 40px; height: 40px; background-color: #808080;"></div>
+            <div style="width: 40px; height: 20px; background-color: #606060; position: relative; border: 2px solid #000; box-shadow: 0 0 0 2px #FFD700; background: linear-gradient(to bottom, #707070, #505050);">
+                <div style="position: absolute; width: 12px; height: 6px; background-color: #404040; top: 50%; left: 100%; transform: translateY(-50%); border: 1px solid #000;"></div>
+            </div>
             <div>
                 <div>Kanon</div>
-                <div style="font-size: 0.8rem;">Kosten: 50 <span style="color: #FFD700;">●</span></div>
+                <div style="font-size: 0.8rem;">50 <span style="color: #FFD700;">●</span></div>
             </div>
         </div>
     </div>
@@ -687,6 +729,26 @@
     </div>
 
     <audio id="gunshotSound" src="assets/gunshot.mp3" preload="auto"></audio>
+
+    <div class="tooltip" style="display: none;">
+        <div class="tooltip-title">Kanon Stats</div>
+        <div class="tooltip-stat">
+            <span>Schade:</span>
+            <span>2 per schot</span>
+        </div>
+        <div class="tooltip-stat">
+            <span>Vuursnelheid:</span>
+            <span>0.8s</span>
+        </div>
+        <div class="tooltip-stat">
+            <span>Bereik:</span>
+            <span>100px</span>
+        </div>
+        <div class="tooltip-stat">
+            <span>Kosten:</span>
+            <span>50 <span style="color: #FFD700;">●</span></span>
+        </div>
+    </div>
 
     <script>
         let soundEnabled = true;
@@ -785,6 +847,9 @@
             console.log(`Wave ${currentWave} gestart!`);
             isWaveInProgress = true;
             updateWaveStatus("Wave in progress...");
+            
+            // Disable shop toggle during wave
+            document.querySelector('.shop-toggle').classList.add('disabled');
             
             const waveButton = document.querySelector('.wave-button');
             waveButton.classList.add('disabled');
@@ -893,9 +958,8 @@
         }
 
         function selectCannon() {
-            if (playerCoins < CANNON_COST) {
-                alert('Niet genoeg coins!');
-                return;
+            if (playerCoins < CANNON_COST || isWaveInProgress) {
+                return; // Doe niets als er niet genoeg coins zijn of wave bezig is
             }
             selectedTower = 'cannon';
             preview.style.display = 'block';
@@ -1135,6 +1199,9 @@
         // Nieuwe functie voor wave completion
         function endWave() {
             isWaveInProgress = false;
+            // Enable shop toggle after wave
+            document.querySelector('.shop-toggle').classList.remove('disabled');
+            
             if (currentWave < 4 && kingHealth > 0) {
                 currentWave++;
                 updateWaveNumber();
@@ -1154,6 +1221,15 @@
         function updateCoins(amount) {
             playerCoins += amount;
             document.getElementById('coinDisplay').textContent = playerCoins;
+            
+            // Update shop items based on available coins
+            document.querySelectorAll('.shop-item').forEach(item => {
+                if (playerCoins < CANNON_COST) {
+                    item.classList.add('disabled');
+                } else {
+                    item.classList.remove('disabled');
+                }
+            });
         }
 
         // Voeg deze functies toe
@@ -1214,6 +1290,40 @@
             // Ververs de pagina
             location.reload();
         }
+
+        const tooltip = document.querySelector('.tooltip');
+        const shopItem = document.querySelector('.shop-item');
+
+        shopItem.addEventListener('mousemove', (e) => {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+            
+            // Update de stats dynamisch
+            tooltip.innerHTML = `
+                <div class="tooltip-title">Kanon Stats</div>
+                <div class="tooltip-stat">
+                    <span>Schade:</span>
+                    <span>${CANNON_DAMAGE} per schot</span>
+                </div>
+                <div class="tooltip-stat">
+                    <span>Vuursnelheid:</span>
+                    <span>0.8s</span>
+                </div>
+                <div class="tooltip-stat">
+                    <span>Bereik:</span>
+                    <span>100px</span>
+                </div>
+                <div class="tooltip-stat">
+                    <span>Kosten:</span>
+                    <span>${CANNON_COST} <span style="color: #FFD700;">●</span></span>
+                </div>
+            `;
+        });
+
+        shopItem.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
     </script>
 </body>
 </html> 
