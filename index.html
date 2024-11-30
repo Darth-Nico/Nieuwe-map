@@ -7,14 +7,14 @@
     <style>
         @font-face {
             font-family: 'PixelFont';
-            src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+            src: url('https://cdn.jsdelivr.net/npm/@fontsource/vcr-osd-mono@4.5.0/files/vcr-osd-mono-latin-400-normal.woff2') format('woff2');
         }
 
         body {
             margin: 0;
             padding: 0;
             background-color: #87CEEB; /* Lichtblauwe lucht */
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'PixelFont', monospace;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -95,39 +95,56 @@
             background-color: rgba(44, 24, 16, 0.9);
             backdrop-filter: blur(5px);
             padding: 2rem;
-            /* Pixel-perfect randen */
             border: 4px solid #8B4513;
             box-shadow: 
                 4px 4px 0 #000,
                 -4px -4px 0 #B8860B;
+            display: flex;           /* Voeg dit toe */
+            flex-direction: column;  /* Voeg dit toe */
+            align-items: center;     /* Voeg dit toe */
         }
 
         .title {
             color: #FFD700;
-            font-size: 3rem;
+            font-size: 4rem;
             text-shadow: 
                 4px 4px 0 #000,
                 -2px -2px 0 #8B4513;
             margin-bottom: 3rem;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
+            font-family: 'PixelFont', monospace;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 300px;
         }
 
         .menu-button {
             background-color: #8B4513;
             color: #FFD700;
-            border: none;
-            padding: 1rem 2rem;
-            margin: 1rem;
-            font-size: 1.2rem;
-            font-family: 'Press Start 2P', cursive;
-            /* Pixel-perfect randen voor knoppen */
             border: 3px solid #000;
+            padding: 1rem 2rem;
+            margin: 0.5rem 0;
+            font-size: 1.5rem;
+            font-family: 'PixelFont', monospace;
             box-shadow: 
                 3px 3px 0 #000,
                 -3px -3px 0 #B8860B;
             image-rendering: pixelated;
             cursor: pointer;
             transition: all 0.1s ease;
+            width: 100%;
+            min-width: 250px;
+            text-align: center;
+            display: block;         /* Voeg dit toe */
+            margin-left: auto;      /* Voeg dit toe */
+            margin-right: auto;     /* Voeg dit toe */
         }
 
         .menu-button:hover {
@@ -157,14 +174,6 @@
             50% { transform: translateY(-10px); }
         }
 
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -188,6 +197,7 @@
             text-align: center;
             max-width: 400px;
             position: relative;
+            font-family: 'PixelFont', monospace;
         }
 
         .close-button {
@@ -197,15 +207,16 @@
             background: none;
             border: none;
             color: #FFD700;
-            font-size: 1.5rem;
+            font-size: 2rem;
             cursor: pointer;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'PixelFont', monospace;
         }
 
         .settings-option {
             margin: 1.5rem 0;
             color: #FFD700;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            font-family: 'PixelFont', monospace;
         }
 
         .github-link {
@@ -228,7 +239,8 @@
             border: 2px solid #000;
             padding: 0.5rem 1rem;
             margin-left: 1rem;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'PixelFont', monospace;
+            font-size: 1.2rem;
             cursor: pointer;
         }
 
@@ -322,8 +334,8 @@
             color: #FFD700;
             border: 3px solid #000;
             padding: 0.5rem 1rem;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.8rem;
+            font-family: 'PixelFont', monospace;
+            font-size: 1.2rem;
             margin-bottom: 1rem;
             cursor: pointer;
             transition: all 0.1s ease;
@@ -449,6 +461,8 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            font-family: 'PixelFont', monospace;
+            font-size: 1.2rem;
         }
 
         .shop-item:hover {
@@ -609,11 +623,12 @@
             padding: 1rem;
             border-radius: 5px;
             color: #FFD700;
-            font-size: 0.8rem;
+            font-size: 1rem;
             pointer-events: none;
             z-index: 1000;
             min-width: 200px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            font-family: 'PixelFont', monospace;
         }
 
         .tooltip-stat {
@@ -934,8 +949,8 @@
             color: #FFD700;
             border: 3px solid #000;
             padding: 0.8rem;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.8rem;
+            font-family: 'PixelFont', monospace;
+            font-size: 1rem;
             text-align: left;
             cursor: pointer;
             transition: all 0.1s ease;
@@ -976,8 +991,8 @@
             width: 100%;
             text-align: center;
             color: white;
-            font-size: 8px;
-            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            font-family: 'PixelFont', monospace;
             text-shadow: 1px 1px 1px #000;
             pointer-events: none;
             z-index: 1;
@@ -988,10 +1003,28 @@
             width: 100%;
             text-align: center;
             color: white;
-            font-size: 10px;
-            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            font-family: 'PixelFont', monospace;
             text-shadow: 1px 1px 1px #000;
             top: -20px;
+        }
+
+        /* Voeg deze CSS toe voor de coin icon */
+        .coin-icon {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            image-rendering: pixelated;
+            margin: 0; /* Verwijder alle margins */
+        }
+
+        /* Update de shop item styling */
+        .shop-item > div > div:last-child {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px; /* Ruimte tussen prijs en coin icon */
         }
     </style>
 </head>
@@ -1067,10 +1100,11 @@
 
         <!-- Game UI -->
         <div class="game-ui">
-            <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
-                <span id="coinDisplay">150</span> <span style="color: #FFD700;">●</span>
+            <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.5rem;">
+                <span id="coinDisplay">150</span> 
+                <img src="assets/coin.png" alt="coins" class="coin-icon">
             </div>
-            <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
+            <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.2rem;">
                 Wave: <span id="waveNumber">1</span>
                 <div id="waveStatus" style="margin-top: 0.5rem; font-size: 0.7rem;">Klaar om te starten</div>
             </div>
@@ -1085,8 +1119,8 @@
                 <div>Vijanden verslagen: <span id="enemiesDefeatedStat">0</span></div>
                 <div>Vijanden doorgekomen: <span id="enemiesLeakedStat">0</span></div>
                 <div>Koning HP: <span id="kingHealthStat">100</span>/100</div>
-                <div>Verdiend: <span id="coinsEarnedStat">0</span> <span style="color: #FFD700;">●</span></div>
-                <div>Wave bonus: <span id="waveBonusStat">50</span> <span style="color: #FFD700;">●</span></div>
+                <div>Verdiend: <span id="coinsEarnedStat">0</span> <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
+                <div>Wave bonus: <span id="waveBonusStat">50</span> <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
             </div>
             <button class="menu-button" style="margin-top: 1rem;" onclick="closeWaveCompletion()">Doorgaan</button>
         </div>
@@ -1104,7 +1138,7 @@
             </div>
             <div>
                 <div>Kanon</div>
-                <div style="font-size: 0.8rem;">50 <span style="color: #FFD700;">●</span></div>
+                <div style="font-size: 0.8rem; display: flex; align-items: center;">50 <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
             </div>
         </div>
         
@@ -1115,7 +1149,7 @@
             </div>
             <div>
                 <div>Dubbel Kanon</div>
-                <div style="font-size: 0.8rem;">100 <span style="color: #FFD700;">●</span></div>
+                <div style="font-size: 0.8rem; display: flex; align-items: center;">100 <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
             </div>
         </div>
 
@@ -1127,7 +1161,7 @@
             </div>
             <div>
                 <div>Genezing</div>
-                <div style="font-size: 0.8rem;">30 <span style="color: #FFD700;">●</span></div>
+                <div style="font-size: 0.8rem; display: flex; align-items: center;">30 <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
             </div>
         </div>
 
@@ -1139,7 +1173,7 @@
             </div>
             <div>
                 <div>Kanon Boost</div>
-                <div style="font-size: 0.8rem;">150 <span style="color: #FFD700;">●</span></div>
+                <div style="font-size: 0.8rem; display: flex; align-items: center;">150 <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
             </div>
         </div>
     </div>
@@ -1173,7 +1207,7 @@
         </div>
         <div class="tooltip-stat">
             <span>Kosten:</span>
-            <span>50 <span style="color: #FFD700;">●</span></span>
+            <span>50 <img src="assets/coin.png" alt="coins" class="coin-icon"></span>
         </div>
     </div>
 
@@ -1239,10 +1273,10 @@
                 Wat is de hoofdstad van Nederland?
             </div>
             <div class="trivia-answers">
-                <button class="answer-button" onclick="checkAnswer('Amsterdam')">Amsterdam</button>
-                <button class="answer-button" onclick="checkAnswer('Den Haag')">Den Haag</button>
-                <button class="answer-button" onclick="checkAnswer('Rotterdam')">Rotterdam</button>
-                <button class="answer-button" onclick="checkAnswer('Utrecht')">Utrecht</button>
+                <button class="answer-button" onclick="checkAnswer(this, 'Amsterdam')">Amsterdam</button>
+                <button class="answer-button" onclick="checkAnswer(this, 'Den Haag')">Den Haag</button>
+                <button class="answer-button" onclick="checkAnswer(this, 'Rotterdam')">Rotterdam</button>
+                <button class="answer-button" onclick="checkAnswer(this, 'Utrecht')">Utrecht</button>
             </div>
         </div>
     </div>
@@ -2087,7 +2121,7 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Kosten:</span>
-                            <span>${HEALING_COST} <span style="color: #FFD700;">●</span></span>
+                            <span>${HEALING_COST} <img src="assets/coin.png" alt="coins" class="coin-icon"></span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Effect:</span>
@@ -2116,7 +2150,7 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Kosten:</span>
-                            <span>${DOUBLE_CANNON_COST} <span style="color: #FFD700;">●</span></span>
+                            <span>${DOUBLE_CANNON_COST} <img src="assets/coin.png" alt="coins" class="coin-icon"></span>
                         </div>
                     `;
                 } else {
@@ -2141,7 +2175,7 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Kosten:</span>
-                            <span>${CANNON_COST} <span style="color: #FFD700;">●</span></span>
+                            <span>${CANNON_COST} <img src="assets/coin.png" alt="coins" class="coin-icon"></span>
                         </div>
                     `;
                 }
@@ -2166,11 +2200,13 @@
                 <div class="modal-content">
                     <h2 class="title" style="font-size: 1.5rem;">Herbouw Kanon</h2>
                     <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
-                        Wil je dit kanon herbouwen voor ${cost} <span style="color: #FFD700;">●</span>?
+                        Wil je dit kanon herbouwen voor ${cost} <img src="assets/coin.png" alt="coins" class="coin-icon">?
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-                        <button class="menu-button" onclick="rebuildCannon(this)" style="margin: 0.5rem;">Ja</button>
-                        <button class="menu-button" onclick="closeRebuildModal(this)" style="margin: 0.5rem;">Nee</button>
+                    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                        <button class="menu-button" onclick="rebuildCannon(this)" 
+                            style="margin: 0; padding: 0.5rem 1rem; font-size: 1rem; min-width: 80px;">Ja</button>
+                        <button class="menu-button" onclick="closeRebuildModal(this)" 
+                            style="margin: 0; padding: 0.5rem 1rem; font-size: 1rem; min-width: 80px;">Nee</button>
                     </div>
                 </div>
             `;
@@ -2206,8 +2242,18 @@
             const hpFill = document.createElement('div');
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
+            
+            // Voeg numerieke waarde toe
+            const hpNumbers = document.createElement('div');
+            hpNumbers.className = 'hp-numbers';
+            const maxDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            hpNumbers.textContent = `${maxDurability}/${maxDurability}`;
+            
             hpBar.appendChild(hpFill);
+            hpBar.appendChild(hpNumbers);
             cannon.appendChild(hpBar);
+
+            // Rest van de code blijft hetzelfde...
 
             // Voeg barrel toe
             if (isDouble) {
@@ -2252,7 +2298,7 @@
                         );
                         cannon.style.transform = `rotate(${angle}rad)`;
                         shoot(enemy, cannonCenterX, cannonCenterY, enemyCenterX, enemyCenterY);
-                        break;
+                        break; // Stop na het vinden van het eerste doel
                     }
                 }
             }
@@ -2345,7 +2391,25 @@
                         hpFill.style.width = percentage + '%';
                         hpNumbers.textContent = `${Math.max(0, enemyHealth)}/${maxHP}`;
                         
-                        // ... (rest van de code) ...
+                        // Verander kleur gebaseerd op HP percentage
+                        if (percentage > 60) {
+                            hpFill.style.backgroundColor = '#2ecc71';
+                        } else if (percentage > 30) {
+                            hpFill.style.backgroundColor = '#f1c40f';
+                        } else {
+                            hpFill.style.backgroundColor = '#e74c3c';
+                        }
+                        
+                        // Check of de vijand dood is
+                        if (enemyHealth <= 0) {
+                            target.remove(); // Verwijder de vijand
+                            enemiesKilled++;
+                            updateCoins(COINS_PER_KILL);
+                            
+                            if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
+                                endWave();
+                            }
+                        }
                     }
                     bullet.remove();
                 });
@@ -2692,12 +2756,58 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Kosten:</span>
-                            <span>${BOOST_COST} <span style="color: #FFD700;">●</span></span>
+                            <span>${BOOST_COST} <img src="assets/coin.png" alt="coins" class="coin-icon"></span>
                         </div>
                     `;
                 }
             });
         });
+
+        // Update alle plekken waar de coin bullet point (●) wordt gebruikt
+        // Vervang de bestaande coin displays met deze nieuwe versie
+
+        // Update de coin display in de game UI
+        document.querySelector('.coin-display').innerHTML = `
+            <span id="coinDisplay">150</span> 
+            <img src="assets/coin.png" alt="coins" class="coin-icon">
+        `;
+
+        // Update de wave completion stats
+        document.querySelector('.wave-stats').innerHTML = `
+            <div>Vijanden verslagen: <span id="enemiesDefeatedStat">0</span></div>
+            <div>Vijanden doorgekomen: <span id="enemiesLeakedStat">0</span></div>
+            <div>Koning HP: <span id="kingHealthStat">100</span>/100</div>
+            <div>Verdiend: <span id="coinsEarnedStat">0</span> <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
+            <div>Wave bonus: <span id="waveBonusStat">50</span> <img src="assets/coin.png" alt="coins" class="coin-icon"></div>
+        `;
+
+        // Update de rebuild modal
+        function showRebuildModal(brokenCannon) {
+            if (isWaveInProgress) return;
+            
+            const isDouble = brokenCannon.dataset.type === 'double';
+            const cost = isDouble ? DOUBLE_CANNON_REBUILD_COST : CANNON_REBUILD_COST;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h2 class="title" style="font-size: 1.5rem;">Herbouw Kanon</h2>
+                    <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
+                        Wil je dit kanon herbouwen voor ${cost} <img src="assets/coin.png" alt="coins" class="coin-icon">?
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                        <button class="menu-button" onclick="rebuildCannon(this)" 
+                            style="margin: 0; padding: 0.5rem 1rem; font-size: 1rem; min-width: 80px;">Ja</button>
+                        <button class="menu-button" onclick="closeRebuildModal(this)" 
+                            style="margin: 0; padding: 0.5rem 1rem; font-size: 1rem; min-width: 80px;">Nee</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.brokenCannon = brokenCannon;
+        }
     </script>
 </body>
 </html> 
