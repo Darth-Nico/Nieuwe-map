@@ -745,6 +745,10 @@
             <span>100px</span>
         </div>
         <div class="tooltip-stat">
+            <span>Duurzaamheid:</span>
+            <span>5 schoten</span>
+        </div>
+        <div class="tooltip-stat">
             <span>Kosten:</span>
             <span>50 <span style="color: #FFD700;">●</span></span>
         </div>
@@ -771,6 +775,7 @@
         const CANNON_COST = 50;
         const COINS_PER_KILL = 15;
         const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
+        const CANNON_DURABILITY = 5;
 
         // Voeg deze variabele toe bij de andere globale variabelen
         let playerCoins = STARTING_COINS;
@@ -1016,7 +1021,7 @@
         function placeCannon(e) {
             if (!selectedTower || !canPlaceTower || playerCoins < CANNON_COST) return;
 
-            updateCoins(-CANNON_COST); // Trek kosten af
+            updateCoins(-CANNON_COST);
             
             const rect = gameMap.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -1026,9 +1031,18 @@
             cannon.className = 'placed-cannon';
             cannon.style.left = (x - 20) + 'px';
             cannon.style.top = (y - 10) + 'px';
+            
+            // Voeg duurzaamheid toe
+            cannon.dataset.durability = CANNON_DURABILITY;
 
-            // Geef elk kanon zijn eigen canShoot property
-            cannon.canShoot = true;  // Verplaatst van lokale variabele naar cannon property
+            // Voeg HP bar toe voor duurzaamheid
+            const hpBar = document.createElement('div');
+            hpBar.className = 'hp-bar';
+            const hpFill = document.createElement('div');
+            hpFill.className = 'hp-fill';
+            hpFill.style.width = '100%';
+            hpBar.appendChild(hpFill);
+            cannon.appendChild(hpBar);
 
             // Voeg alleen de loop toe
             const barrel = document.createElement('div');
@@ -1065,11 +1079,11 @@
             }
 
             // Voeg kanon logica toe
-            let canShoot = true;
+            cannon.canShoot = true;  // Zet canShoot op het cannon object
             const radius = 100;
 
             function checkTargets() {
-                if (!isWaveInProgress) return;
+                if (!isWaveInProgress || !cannon.isConnected) return;
 
                 const cannonRect = cannon.getBoundingClientRect();
                 const cannonCenterX = cannonRect.left + cannonRect.width / 2;
@@ -1088,29 +1102,54 @@
                         Math.pow(enemyCenterY - cannonCenterY, 2)
                     );
 
-                    if (distance <= radius) {
+                    if (distance <= radius && cannon.canShoot) {
                         const angle = Math.atan2(
                             enemyCenterY - cannonCenterY,
                             enemyCenterX - cannonCenterX
                         );
                         cannon.style.transform = `rotate(${angle}rad)`;
-
-                        if (cannon.canShoot) {
-                            shoot(enemy, cannonCenterX, cannonCenterY, enemyCenterX, enemyCenterY);
-                        }
+                        shoot(enemy, cannonCenterX, cannonCenterY, enemyCenterX, enemyCenterY);
+                        break; // Stop na het vinden van het eerste doel
                     }
                 }
             }
 
+            // Voeg de shoot functie hier toe, binnen placeCannon
             function shoot(target, startX, startY, targetX, targetY) {
-                if (!cannon.canShoot || !target || !target.isConnected) return;  // Check cannon.canShoot
+                if (!cannon.canShoot || !target || !target.isConnected) return;
                 
-                cannon.canShoot = false;  // Gebruik cannon.canShoot
+                cannon.canShoot = false;
+
+                // Verminder duurzaamheid
+                let durability = parseInt(cannon.dataset.durability) - 1;
+                cannon.dataset.durability = durability;
+                
+                // Update duurzaamheid bar
+                const hpFill = cannon.querySelector('.hp-fill');
+                const percentage = (durability / CANNON_DURABILITY) * 100;
+                hpFill.style.width = percentage + '%';
+                
+                // Verander kleur gebaseerd op duurzaamheid
+                if (percentage > 60) {
+                    hpFill.style.backgroundColor = '#2ecc71';
+                } else if (percentage > 30) {
+                    hpFill.style.backgroundColor = '#f1c40f';
+                } else {
+                    hpFill.style.backgroundColor = '#e74c3c';
+                }
+                
+                // Verwijder kanon als duurzaamheid op is
+                if (durability <= 0) {
+                    clearInterval(cannon.checkInterval);  // Clear het interval
+                    setTimeout(() => {
+                        cannon.remove();
+                    }, 200);
+                }
 
                 // Speel het schiet geluid af als geluid aan staat
                 if (soundEnabled) {
                     const gunshot = document.getElementById('gunshotSound');
-                    gunshot.currentTime = 0; // Reset het geluid voor snelle herhalingen
+                    gunshot.currentTime = 0;
                     gunshot.play().catch(error => console.log("Audio afspelen mislukt:", error));
                 }
 
@@ -1164,7 +1203,7 @@
                         if (enemyHealth <= 0) {
                             target.remove();
                             enemiesKilled++;
-                            updateCoins(COINS_PER_KILL); // Voeg coins toe voor kill
+                            updateCoins(COINS_PER_KILL);
                             
                             if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
                                 endWave();
@@ -1176,12 +1215,14 @@
 
                 // Update de cooldown timer
                 setTimeout(() => {
-                    cannon.canShoot = true;  // Reset cannon.canShoot
+                    if (cannon.isConnected) {
+                        cannon.canShoot = true;
+                    }
                 }, 800);
             }
 
-            // Start check interval
-            setInterval(checkTargets, 100);
+            // Start het interval en sla de interval ID op op het cannon object
+            cannon.checkInterval = setInterval(checkTargets, 100);
 
             gameMap.appendChild(cannon);
 
@@ -1299,7 +1340,6 @@
             tooltip.style.left = (e.pageX + 15) + 'px';
             tooltip.style.top = (e.pageY + 15) + 'px';
             
-            // Update de stats dynamisch
             tooltip.innerHTML = `
                 <div class="tooltip-title">Kanon Stats</div>
                 <div class="tooltip-stat">
@@ -1313,6 +1353,10 @@
                 <div class="tooltip-stat">
                     <span>Bereik:</span>
                     <span>100px</span>
+                </div>
+                <div class="tooltip-stat">
+                    <span>Duurzaamheid:</span>
+                    <span>${CANNON_DURABILITY} schoten</span>
                 </div>
                 <div class="tooltip-stat">
                     <span>Kosten:</span>
