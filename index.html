@@ -1123,7 +1123,11 @@
         <div class="cannon-radius"></div>
     </div>
 
+    <!-- Voeg deze audio tags toe bij de andere audio elementen -->
     <audio id="gunshotSound" src="assets/gunshot.mp3" preload="auto"></audio>
+    <audio id="bonusSound" src="assets/game-bonus.mp3" preload="auto"></audio>
+    <audio id="wrongSound" src="assets/wrong.mp3" preload="auto"></audio>
+    <audio id="purchaseSound" src="assets/aankoop.mp3" preload="auto"></audio>
 
     <div class="tooltip" style="display: none;">
         <div class="tooltip-title">Kanon Stats</div>
@@ -1387,6 +1391,12 @@
 
         // Update de updateCoins functie
         function updateCoins(amount) {
+            if (amount < 0 && soundEnabled) { // Alleen afspelen bij uitgaven
+                const purchaseSound = document.getElementById('purchaseSound');
+                purchaseSound.currentTime = 0;
+                purchaseSound.play().catch(error => console.log("Audio afspelen mislukt:", error));
+            }
+            
             playerCoins += amount;
             document.getElementById('coinDisplay').textContent = playerCoins;
             
@@ -2459,65 +2469,6 @@
             });
         });
 
-        function checkAnswer(answer) {
-            // Voeg hier de logica voor het controleren van de antwoorden
-            console.log('Antwoord:', answer);
-            // Voeg hier de logica voor het tonen van de trivia modal
-            document.getElementById('bonusCoinModal').style.display = 'block';
-        }
-
-        // Voeg deze functies toe
-        async function showTriviaQuestion() {
-            const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
-            
-            if (questionsAsked >= MAX_TRIVIA_QUESTIONS) {
-                showWarningTooltip('Voltooi eerst een wave om meer vragen te kunnen beantwoorden', event.pageX, event.pageY);
-                return;
-            }
-
-            try {
-                const response = await fetch('https://opentdb.com/api.php?amount=1&type=multiple');
-                const data = await response.json();
-                const question = data.results[0];
-                
-                const triviaModal = document.getElementById('triviaModal');
-                const questionElement = triviaModal.querySelector('.trivia-question');
-                const answersElement = triviaModal.querySelector('.trivia-answers');
-                
-                // Decodeer HTML entities
-                questionElement.innerHTML = decodeHtmlEntities(question.question);
-                
-                // Meng de antwoorden
-                const answers = [
-                    question.correct_answer,
-                    ...question.incorrect_answers
-                ].sort(() => Math.random() - 0.5);
-                
-                // Maak antwoord knoppen
-                answersElement.innerHTML = answers.map(answer => `
-                    <button class="answer-button" onclick="checkAnswer(this, '${question.correct_answer}')">
-                        ${decodeHtmlEntities(answer)}
-                    </button>
-                `).join('');
-                
-                triviaModal.style.display = 'flex';
-                
-                // Update trivia counter
-                const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
-                localStorage.setItem('triviaQuestionsAsked', questionsAsked + 1);
-                updateTriviaBonusButton();
-                
-            } catch (error) {
-                console.error('Error fetching trivia:', error);
-            }
-        }
-
-        function decodeHtmlEntities(text) {
-            const textarea = document.createElement('textarea');
-            textarea.innerHTML = text;
-            return textarea.value;
-        }
-
         function checkAnswer(button, correctAnswer) {
             const buttons = document.querySelectorAll('.answer-button');
             buttons.forEach(btn => btn.disabled = true);
@@ -2525,6 +2476,13 @@
             if (button.textContent.trim() === correctAnswer) {
                 button.classList.add('correct');
                 updateCoins(10);
+                
+                // Speel het bonus geluid af
+                if (soundEnabled) {
+                    const bonusSound = document.getElementById('bonusSound');
+                    bonusSound.currentTime = 0;
+                    bonusSound.play().catch(error => console.log("Audio afspelen mislukt:", error));
+                }
                 
                 // Update trivia counter
                 const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
@@ -2536,6 +2494,14 @@
                 }, 1500);
             } else {
                 button.classList.add('incorrect');
+                
+                // Speel het foute antwoord geluid af
+                if (soundEnabled) {
+                    const wrongSound = document.getElementById('wrongSound');
+                    wrongSound.currentTime = 0;
+                    wrongSound.play().catch(error => console.log("Audio afspelen mislukt:", error));
+                }
+                
                 buttons.forEach(btn => {
                     if (btn.textContent.trim() === correctAnswer) {
                         btn.classList.add('correct');
