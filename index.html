@@ -1475,6 +1475,7 @@
             cannon.className = 'placed-cannon';
             cannon.style.left = brokenCannon.style.left;
             cannon.style.top = brokenCannon.style.top;
+            cannon.style.transform = brokenCannon.style.transform; // Behoud rotatie
             cannon.dataset.durability = CANNON_DURABILITY;
             cannon.canShoot = true;
 
@@ -1492,10 +1493,152 @@
             barrel.className = 'cannon-barrel';
             cannon.appendChild(barrel);
 
+            // Definieer checkTargets functie voor dit kanon
+            function checkTargets() {
+                if (!isWaveInProgress || !cannon.isConnected) return;
+
+                const cannonRect = cannon.getBoundingClientRect();
+                const cannonCenterX = cannonRect.left + cannonRect.width / 2;
+                const cannonCenterY = cannonRect.top + cannonRect.height / 2;
+
+                const enemies = document.querySelectorAll('.enemy');
+                for (const enemy of enemies) {
+                    if (!enemy.isConnected) continue;
+
+                    const enemyRect = enemy.getBoundingClientRect();
+                    const enemyCenterX = enemyRect.left + enemyRect.width / 2;
+                    const enemyCenterY = enemyRect.top + enemyRect.height / 2;
+
+                    const distance = Math.sqrt(
+                        Math.pow(enemyCenterX - cannonCenterX, 2) +
+                        Math.pow(enemyCenterY - cannonCenterY, 2)
+                    );
+
+                    if (distance <= 100 && cannon.canShoot) {
+                        const angle = Math.atan2(
+                            enemyCenterY - cannonCenterY,
+                            enemyCenterX - cannonCenterX
+                        );
+                        cannon.style.transform = `rotate(${angle}rad)`;
+                        shoot(enemy, cannonCenterX, cannonCenterY, enemyCenterX, enemyCenterY);
+                        break;
+                    }
+                }
+            }
+
+            // Definieer shoot functie voor dit kanon
+            function shoot(target, startX, startY, targetX, targetY) {
+                if (!cannon.canShoot || !target || !target.isConnected) return;
+                
+                cannon.canShoot = false;
+
+                // Verminder duurzaamheid
+                let durability = parseInt(cannon.dataset.durability) - 1;
+                cannon.dataset.durability = durability;
+                
+                // Update duurzaamheid bar
+                const hpFill = cannon.querySelector('.hp-fill');
+                const percentage = (durability / CANNON_DURABILITY) * 100;
+                hpFill.style.width = percentage + '%';
+                
+                // Verander kleur gebaseerd op duurzaamheid
+                if (percentage > 60) {
+                    hpFill.style.backgroundColor = '#2ecc71';
+                } else if (percentage > 30) {
+                    hpFill.style.backgroundColor = '#f1c40f';
+                } else {
+                    hpFill.style.backgroundColor = '#e74c3c';
+                }
+                
+                // Verwijder kanon als duurzaamheid op is
+                if (durability <= 0) {
+                    clearInterval(cannon.checkInterval);
+                    setTimeout(() => {
+                        const brokenCannon = document.createElement('div');
+                        brokenCannon.className = 'broken-cannon';
+                        brokenCannon.style.left = cannon.style.left;
+                        brokenCannon.style.top = cannon.style.top;
+                        brokenCannon.style.transform = cannon.style.transform;
+                        brokenCannon.addEventListener('click', () => showRebuildModal(brokenCannon));
+                        gameMap.appendChild(brokenCannon);
+                        
+                        cannon.remove();
+                    }, 200);
+                }
+
+                // Speel het schiet geluid af
+                if (soundEnabled) {
+                    const gunshot = document.getElementById('gunshotSound');
+                    gunshot.currentTime = 0;
+                    gunshot.play().catch(error => console.log("Audio afspelen mislukt:", error));
+                }
+
+                // Voeg recoil animatie toe
+                const currentRotation = cannon.style.transform;
+                cannon.style.setProperty('--rotation', currentRotation);
+                cannon.classList.add('shooting');
+                
+                // Voeg muzzle flash toe
+                const flash = document.createElement('div');
+                flash.className = 'muzzle-flash';
+                cannon.appendChild(flash);
+                flash.style.animation = 'flash 0.15s ease-out';
+                
+                setTimeout(() => {
+                    flash.remove();
+                    cannon.classList.remove('shooting');
+                }, 150);
+
+                // Maak en schiet kogel
+                const bullet = document.createElement('div');
+                bullet.className = 'bullet';
+                bullet.style.left = startX + 'px';
+                bullet.style.top = startY + 'px';
+                bullet.style.setProperty('--targetX', `${targetX - startX}px`);
+                bullet.style.setProperty('--targetY', `${targetY - startY}px`);
+                
+                document.body.appendChild(bullet);
+                bullet.style.animation = 'shoot 0.2s linear forwards';
+
+                bullet.addEventListener('animationend', () => {
+                    if (target.isConnected) {
+                        let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
+                        target.dataset.health = enemyHealth;
+                        
+                        const hpFill = target.querySelector('.hp-fill');
+                        const percentage = (enemyHealth / ENEMY_HP) * 100;
+                        hpFill.style.width = percentage + '%';
+                        
+                        if (percentage > 60) {
+                            hpFill.style.backgroundColor = '#2ecc71';
+                        } else if (percentage > 30) {
+                            hpFill.style.backgroundColor = '#f1c40f';
+                        } else {
+                            hpFill.style.backgroundColor = '#e74c3c';
+                        }
+                        
+                        if (enemyHealth <= 0) {
+                            target.remove();
+                            enemiesKilled++;
+                            updateCoins(COINS_PER_KILL);
+                            
+                            if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
+                                endWave();
+                            }
+                        }
+                    }
+                    bullet.remove();
+                });
+
+                setTimeout(() => {
+                    if (cannon.isConnected) {
+                        cannon.canShoot = true;
+                    }
+                }, 800);
+            }
+
             // Start het interval voor het nieuwe kanon
-            cannon.checkInterval = setInterval(() => {
-                checkTargets.call(cannon);
-            }, 100);
+            cannon.checkInterval = setInterval(checkTargets, 100);
 
             // Verwijder kapot kanon en plaats nieuw kanon
             brokenCannon.remove();
