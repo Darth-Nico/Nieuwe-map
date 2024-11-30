@@ -704,6 +704,7 @@
             pointer-events: none;
         }
 
+        /* Update de warning-tooltip CSS */
         .warning-tooltip {
             position: fixed;
             background-color: rgba(231, 76, 60, 0.95);
@@ -1144,6 +1145,7 @@
             waveStatus.textContent = status;
         }
 
+        // Update de updateKingHealth functie
         function updateKingHealth() {
             const fillElement = document.querySelector('.king-hp-fill');
             const percentage = (kingHealth / 100) * 100;
@@ -1159,14 +1161,47 @@
             }
 
             // Update healing item status
+            updateHealingItemStatus();
+        }
+
+        // Voeg deze nieuwe functie toe
+        function updateHealingItemStatus() {
             const healingItem = document.querySelector('.shop-item.healing');
-            if (kingHealth >= 100) {
-                healingItem.classList.add('disabled');
-                healingItem.onclick = null; // Verwijder click handler
-            } else {
-                healingItem.classList.remove('disabled');
-                healingItem.onclick = buyHealing; // Herstel click handler
+            if (healingItem) {
+                if (kingHealth >= 100) {
+                    healingItem.classList.add('disabled');
+                    healingItem.style.cursor = 'not-allowed';
+                    healingItem.onclick = null;
+                } else if (playerCoins < HEALING_COST) {
+                    healingItem.classList.add('disabled');
+                    healingItem.style.cursor = 'not-allowed';
+                    healingItem.onclick = null;
+                } else {
+                    healingItem.classList.remove('disabled');
+                    healingItem.style.cursor = 'pointer';
+                    healingItem.onclick = buyHealing;
+                }
             }
+        }
+
+        // Update de updateCoins functie
+        function updateCoins(amount) {
+            playerCoins += amount;
+            document.getElementById('coinDisplay').textContent = playerCoins;
+            
+            // Update shop items based on available coins
+            document.querySelectorAll('.shop-item').forEach((item, index) => {
+                if (item.classList.contains('healing')) {
+                    updateHealingItemStatus(); // Update healing item apart
+                } else {
+                    const cost = index === 0 ? CANNON_COST : DOUBLE_CANNON_COST;
+                    if (playerCoins < cost) {
+                        item.classList.add('disabled');
+                    } else {
+                        item.classList.remove('disabled');
+                    }
+                }
+            });
         }
 
         function startWave() {
@@ -1175,15 +1210,18 @@
             // Check voor actieve kanonnen
             const activeCannons = document.querySelectorAll('.placed-cannon');
             if (activeCannons.length === 0) {
-                return; // Alleen return, geen tooltip meer hier
+                return;
             }
             
             console.log(`Wave ${currentWave} gestart!`);
             isWaveInProgress = true;
             updateWaveStatus("Wave in progress...");
             
-            // Disable shop toggle during wave
-            document.querySelector('.shop-toggle').classList.add('disabled');
+            // Verwijder deze regel die de shop-toggle uitschakelt
+            // document.querySelector('.shop-toggle').classList.add('disabled');
+            
+            // Update shop items voor combat/non-combat
+            updateShopDuringWave(true);
             
             const waveButton = document.querySelector('.wave-button');
             waveButton.classList.add('disabled');
@@ -1238,6 +1276,27 @@
 
                 enemyCount++;  // Increment enemyCount na het spawnen
             }, 1000);
+        }
+
+        // Voeg deze nieuwe functie toe
+        function updateShopDuringWave(isWaveActive) {
+            const combatItems = document.querySelectorAll('.shop-item:not(.healing)');
+            combatItems.forEach(item => {
+                if (isWaveActive) {
+                    item.classList.add('disabled');
+                    item.style.cursor = 'not-allowed';
+                    // Bewaar de originele onclick handler
+                    item.dataset.originalOnclick = item.getAttribute('onclick');
+                    item.removeAttribute('onclick');
+                } else {
+                    item.classList.remove('disabled');
+                    item.style.cursor = 'pointer';
+                    // Herstel de originele onclick handler
+                    if (item.dataset.originalOnclick) {
+                        item.setAttribute('onclick', item.dataset.originalOnclick);
+                    }
+                }
+            });
         }
 
         // Initialiseer wave status
@@ -1659,8 +1718,10 @@
         // Nieuwe functie voor wave completion
         function endWave() {
             isWaveInProgress = false;
-            // Enable shop toggle after wave
             document.querySelector('.shop-toggle').classList.remove('disabled');
+            
+            // Herstel shop items naar normale staat
+            updateShopDuringWave(false);
             
             if (currentWave < 4 && kingHealth > 0) {
                 currentWave++;
@@ -1678,22 +1739,6 @@
         updateKingHealth();
 
         // Voeg deze functie toe
-        function updateCoins(amount) {
-            playerCoins += amount;
-            document.getElementById('coinDisplay').textContent = playerCoins;
-            
-            // Update shop items based on available coins
-            document.querySelectorAll('.shop-item').forEach((item, index) => {
-                const cost = index === 0 ? CANNON_COST : DOUBLE_CANNON_COST;
-                if (playerCoins < cost) {
-                    item.classList.add('disabled');
-                } else {
-                    item.classList.remove('disabled');
-                }
-            });
-        }
-
-        // Voeg deze functies toe
         function showGameOver() {
             const gameOverModal = document.getElementById('gameOverModal');
             gameOverModal.style.display = "flex";
@@ -2115,6 +2160,8 @@
 
         // Voeg deze functie toe
         function buyHealing() {
+            const healingItem = document.querySelector('.shop-item.healing');
+            if (healingItem.classList.contains('disabled')) return; // Check of item disabled is
             if (kingHealth >= 100) return; // Kan niet kopen als koning volle gezondheid heeft
             if (playerCoins < HEALING_COST) return; // Kan niet kopen als niet genoeg munten
 
@@ -2122,6 +2169,68 @@
             kingHealth = Math.min(100, kingHealth + HEALING_AMOUNT); // Voorkom dat health boven 100 gaat
             updateKingHealth();
         }
+
+        // Voeg deze functie toe voor het tonen van de reden waarom een item disabled is
+        function showDisabledReason(item, event) {
+            let reason = '';
+            
+            // Bepaal de reden waarom het item disabled is
+            if (item.classList.contains('healing')) {
+                if (kingHealth >= 100) {
+                    reason = 'Koning heeft volledige gezondheid';
+                }
+            } else if (isWaveInProgress) {
+                reason = 'Kan geen kanonnen kopen tijdens een wave';
+            }
+            
+            if (playerCoins < getItemCost(item)) {
+                reason = 'Niet genoeg munten';
+            }
+
+            if (reason) {
+                showWarningTooltip(reason, event.pageX, event.pageY);
+            }
+        }
+
+        // Helper functie om de kosten van een item te bepalen
+        function getItemCost(item) {
+            if (item.classList.contains('healing')) return HEALING_COST;
+            if (item.querySelector('.shop-item-name').textContent.includes('Dubbel')) return DOUBLE_CANNON_COST;
+            return CANNON_COST;
+        }
+
+        // Update de showWarningTooltip functie
+        function showWarningTooltip(message, x, y) {
+            removeWarningTooltip(); // Verwijder bestaande tooltips
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'warning-tooltip';
+            tooltip.textContent = message;
+            tooltip.style.left = (x + 15) + 'px';
+            tooltip.style.top = (y + 15) + 'px';
+            document.body.appendChild(tooltip);
+        }
+
+        // Update de event listeners voor shop items
+        shopItems.forEach(item => {
+            item.addEventListener('mouseover', (e) => {
+                if (item.classList.contains('disabled')) {
+                    showDisabledReason(item, e);
+                }
+            });
+
+            item.addEventListener('mousemove', (e) => {
+                const warningTooltip = document.querySelector('.warning-tooltip');
+                if (warningTooltip && item.classList.contains('disabled')) {
+                    warningTooltip.style.left = (e.pageX + 15) + 'px';
+                    warningTooltip.style.top = (e.pageY + 15) + 'px';
+                }
+            });
+
+            item.addEventListener('mouseleave', () => {
+                removeWarningTooltip();
+            });
+        });
     </script>
 </body>
 </html> 
