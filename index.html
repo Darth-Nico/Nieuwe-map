@@ -1029,7 +1029,7 @@
         let kingHealth = 100;
         const ENEMY_DAMAGE = 15; // Schade die vijanden doen aan de koning
         const ENEMY_HP = 10;     // HP van de vijanden
-        const CANNON_DAMAGE = 2; // Schade van het kanon
+        const CANNON_DAMAGE = 4; // Schade van het kanon
 
         // Voeg deze constanten toe aan het begin van het script waar de andere constanten staan
         const STARTING_COINS = 150;
@@ -1039,10 +1039,10 @@
         const CANNON_DURABILITY = 5;
         const CANNON_REBUILD_COST = 30;
         const DOUBLE_CANNON_COST = 100;
-        const DOUBLE_CANNON_DAMAGE = 4;
+        const DOUBLE_CANNON_DAMAGE = 5; // Verhoogd van 2 naar 5
         const DOUBLE_CANNON_DURABILITY = 8;
         const DOUBLE_CANNON_REBUILD_COST = 50;
-        const DOUBLE_CANNON_FIRE_RATE = 600;
+        const DOUBLE_CANNON_FIRE_RATE = 400; // Verlaagd van 800 naar 400 (0.4 seconden)
 
         // Voeg deze variabele toe bij de andere globale variabelen
         let playerCoins = STARTING_COINS;
@@ -1687,11 +1687,11 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Vuursnelheid:</span>
-                            <span>0.6s</span>
+                            <span>0.4s</span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Bereik:</span>
-                            <span>100px</span>
+                            <span>80px</span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Duurzaamheid:</span>
