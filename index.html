@@ -2628,6 +2628,26 @@
                 }
             });
         });
+
+        // Update de event listeners voor de boost item
+        const boostItem = document.querySelector('.shop-item.boost');
+        boostItem.addEventListener('mouseover', (e) => {
+            if (document.querySelectorAll('.placed-cannon, .placed-double-cannon').length === 0) {
+                showWarningTooltip('Er zijn geen kanonnen om te boosten!', e.pageX, e.pageY);
+            }
+        });
+
+        boostItem.addEventListener('mousemove', (e) => {
+            const warningTooltip = document.querySelector('.warning-tooltip');
+            if (warningTooltip && document.querySelectorAll('.placed-cannon, .placed-double-cannon').length === 0) {
+                warningTooltip.style.left = (e.pageX + 15) + 'px';
+                warningTooltip.style.top = (e.pageY + 15) + 'px';
+            }
+        });
+
+        boostItem.addEventListener('mouseout', () => {
+            removeWarningTooltip();
+        });
     </script>
 </body>
 </html> 
