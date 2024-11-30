@@ -255,10 +255,18 @@
             border: none;
         }
 
+        /* Update de path styling */
         .path {
             position: absolute;
             background-color: #B8860B;
-            border: 2px solid #8B4513;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            border: none; /* Verwijder de outline */
         }
 
         .path.vertical {
@@ -274,7 +282,14 @@
             width: 60px;
             height: 60px;
             background-color: #B8860B;
-            border: 2px solid #8B4513;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            border: none; /* Verwijder de outline */
         }
 
         .king-position {
@@ -382,6 +397,7 @@
             box-shadow: none;
         }
 
+        /* Update de shop-toggle CSS */
         .shop-toggle {
             position: fixed;
             right: 0;
@@ -396,7 +412,8 @@
             border: 3px solid #000;
             border-right: none;
             z-index: 102;
-            display: none;
+            display: none; /* Verberg de button standaard */
+            transition: right 0.3s ease;
         }
 
         .shop-toggle:hover {
@@ -844,6 +861,95 @@
             cursor: not-allowed;
             filter: grayscale(100%);
         }
+
+        /* Voeg deze CSS toe */
+        .bonus-coin-button {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background-color: rgba(44, 24, 16, 0.9);
+            border: 4px solid #8B4513;
+            box-shadow: 4px 4px 0 #000;
+            padding: 0.8rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 101;
+            transition: transform 0.1s ease, opacity 0.3s ease;
+        }
+
+        /* Voeg deze nieuwe CSS toe voor de disabled state */
+        .bonus-coin-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+            transform: none;
+        }
+
+        .bonus-coin-button.disabled:hover {
+            transform: none;
+        }
+
+        .bonus-coin-button:hover:not(.disabled) {
+            transform: scale(1.05);
+        }
+
+        .bonus-coin-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .bonus-coin-button span {
+            color: #FFD700;
+            font-size: 1.2rem;
+        }
+
+        .trivia-modal .modal-content {
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .trivia-question {
+            color: #FFD700;
+            font-size: 1rem;
+            margin: 1rem 0;
+            line-height: 1.4;
+        }
+
+        .trivia-answers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .answer-button {
+            background-color: #8B4513;
+            color: #FFD700;
+            border: 3px solid #000;
+            padding: 0.8rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .answer-button:hover {
+            background-color: #A0522D;
+            transform: translateX(4px);
+        }
+
+        .answer-button.correct {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .answer-button.incorrect {
+            background-color: #e74c3c;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -1018,6 +1124,11 @@
             <h2 class="title" style="font-size: 1.5rem;">Instructies</h2>
             
             <div style="color: #FFD700; text-align: left; font-size: 0.8rem; line-height: 1.5;">
+                <!-- Voeg deze nieuwe sectie toe bovenaan -->
+                <div style="background-color: rgba(46, 204, 113, 0.2); padding: 1rem; border: 2px solid #2ecc71; margin-bottom: 1rem; border-radius: 5px;">
+                    <span style="color: #2ecc71;">Tip:</span> Druk op F11 voor de beste spelervaring in volledig scherm!
+                </div>
+
                 <h3 style="margin: 1rem 0; font-size: 1rem;">Doel van het spel</h3>
                 <p>Bescherm de Aardappel Koning tegen de aanvallende vijanden! Plaats kanonnen strategisch om de vijanden tegen te houden voordat ze de koning bereiken.</p>
                 
@@ -1037,20 +1148,58 @@
                     <li style="margin: 0.5rem 0;">• Kanonnen schieten automatisch op vijanden binnen bereik</li>
                 </ul>
 
-                <h3 style="margin: 1rem 0; font-size: 1rem;">Vijanden</h3>
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Koning Support</h3>
                 <ul style="list-style: none; padding: 0;">
-                    <li style="margin: 0.5rem 0;">• Vijanden volgen het pad naar de koning</li>
-                    <li style="margin: 0.5rem 0;">• Elke vijand die de koning bereikt doet schade</li>
-                    <li style="margin: 0.5rem 0;">• De koning heeft een beperkte hoeveelheid HP</li>
+                    <li style="margin: 0.5rem 0;">• Koop genezing om de koning te helen (+10 HP)</li>
+                    <li style="margin: 0.5rem 0;">• Genezing is beschikbaar tijdens waves</li>
+                    <li style="margin: 0.5rem 0;">• Genezing is uitgeschakeld bij volle gezondheid</li>
+                </ul>
+
+                <h3 style="margin: 1rem 0; font-size: 1rem;">Bonus Munten</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin: 0.5rem 0;">• Beantwoord kennisvragen voor extra munten</li>
+                    <li style="margin: 0.5rem 0;">• Maximaal 3 vragen per wave</li>
+                    <li style="margin: 0.5rem 0;">• Verdien 10 munten per goed antwoord</li>
+                    <li style="margin: 0.5rem 0;">• Vragen worden gereset na elke wave</li>
                 </ul>
 
                 <h3 style="margin: 1rem 0; font-size: 1rem;">Waves</h3>
                 <ul style="list-style: none; padding: 0;">
                     <li style="margin: 0.5rem 0;">• Elke wave wordt moeilijker</li>
-                    <li style="margin: 0.5rem 0;">• Overleef alle waves om te winnen</li>
+                    <li style="margin: 0.5rem 0;">• Vijanden worden sterker per wave</li>
                     <li style="margin: 0.5rem 0;">• Je verliest als de koning geen HP meer heeft</li>
                 </ul>
             </div>
+        </div>
+    </div>
+
+    <div id="bonusCoinModal" class="modal">
+        <div class="modal-content">
+            <h2 class="title" style="font-size: 1.5rem;">Bonus Munten</h2>
+            <div class="trivia-question">
+                Wat is de hoofdstad van Nederland?
+            </div>
+            <div class="trivia-answers">
+                <button class="answer-button" onclick="checkAnswer('Amsterdam')">Amsterdam</button>
+                <button class="answer-button" onclick="checkAnswer('Den Haag')">Den Haag</button>
+                <button class="answer-button" onclick="checkAnswer('Rotterdam')">Rotterdam</button>
+                <button class="answer-button" onclick="checkAnswer('Utrecht')">Utrecht</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voeg dit toe aan de game-view div -->
+    <button class="bonus-coin-button" onclick="showTriviaQuestion()">
+        <span style="color: #FFD700; font-size: 1.5rem;">●</span>
+        <span>+</span>
+    </button>
+
+    <!-- Voeg dit toe aan het einde van de body -->
+    <div id="triviaModal" class="modal">
+        <div class="modal-content">
+            <h2 class="title" style="font-size: 1.5rem;">Verdien Munten!</h2>
+            <div class="trivia-question"></div>
+            <div class="trivia-answers"></div>
         </div>
     </div>
 
@@ -1090,11 +1239,18 @@
         const HEALING_COST = 30;
         const HEALING_AMOUNT = 10;
 
+        // Voeg deze constanten toe bovenaan het script
+        const MAX_TRIVIA_QUESTIONS = 3;
+        const TRIVIA_RESET_WAVE = 1;
+
+        // Update de startGame functie
         function startGame() {
             document.querySelector('.game-container').style.display = 'none';
             document.getElementById('gameView').style.display = 'block';
-            document.querySelector('.shop-toggle').style.display = 'block';
-            updateCoins(0); // Update initial coins display
+            document.querySelector('.shop-toggle').style.display = 'block'; // Toon de shop toggle
+            document.querySelector('.bonus-coin-button').style.display = 'flex';
+            updateTriviaBonusButton();
+            updateCoins(0);
         }
 
         function showInstructions() {
@@ -1190,8 +1346,9 @@
                     healingItem.style.cursor = 'pointer';
                     healingItem.onclick = buyHealing;
                 }
+                }
             }
-        }
+        
 
         // Update de updateCoins functie
         function updateCoins(amount) {
@@ -1349,10 +1506,13 @@
         const preview = document.querySelector('.cannon-preview');
         const gameMap = document.querySelector('.game-map');
 
+        // Update de toggleShop functie
         function toggleShop() {
             isShopOpen = !isShopOpen;
             document.querySelector('.shop-sidebar').classList.toggle('open');
-            document.querySelector('.shop-toggle').textContent = isShopOpen ? '▶' : '◀';
+            const toggleButton = document.querySelector('.shop-toggle');
+            toggleButton.textContent = isShopOpen ? '▶' : '◀';
+            toggleButton.classList.toggle('open'); // Toggle de 'open' class
         }
 
         // Voeg deze functie toe
@@ -1725,6 +1885,10 @@
             isWaveInProgress = false;
             document.querySelector('.shop-toggle').classList.remove('disabled');
             updateShopDuringWave(false);
+            
+            // Reset trivia vragen na een wave
+            localStorage.setItem('triviaQuestionsAsked', '0');
+            updateTriviaBonusButton();
             
                 currentWave++;
                 updateWaveNumber();
@@ -2227,6 +2391,129 @@
             item.addEventListener('mouseleave', () => {
                 removeWarningTooltip();
             });
+        });
+
+        function checkAnswer(answer) {
+            // Voeg hier de logica voor het controleren van de antwoorden
+            console.log('Antwoord:', answer);
+            // Voeg hier de logica voor het tonen van de trivia modal
+            document.getElementById('bonusCoinModal').style.display = 'block';
+        }
+
+        // Voeg deze functies toe
+        async function showTriviaQuestion() {
+            const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
+            
+            if (questionsAsked >= MAX_TRIVIA_QUESTIONS) {
+                showWarningTooltip('Voltooi eerst een wave om meer vragen te kunnen beantwoorden', event.pageX, event.pageY);
+                return;
+            }
+
+            try {
+                const response = await fetch('https://opentdb.com/api.php?amount=1&type=multiple');
+                const data = await response.json();
+                const question = data.results[0];
+                
+                const triviaModal = document.getElementById('triviaModal');
+                const questionElement = triviaModal.querySelector('.trivia-question');
+                const answersElement = triviaModal.querySelector('.trivia-answers');
+                
+                // Decodeer HTML entities
+                questionElement.innerHTML = decodeHtmlEntities(question.question);
+                
+                // Meng de antwoorden
+                const answers = [
+                    question.correct_answer,
+                    ...question.incorrect_answers
+                ].sort(() => Math.random() - 0.5);
+                
+                // Maak antwoord knoppen
+                answersElement.innerHTML = answers.map(answer => `
+                    <button class="answer-button" onclick="checkAnswer(this, '${question.correct_answer}')">
+                        ${decodeHtmlEntities(answer)}
+                    </button>
+                `).join('');
+                
+                triviaModal.style.display = 'flex';
+                
+                // Update trivia counter
+                const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
+                localStorage.setItem('triviaQuestionsAsked', questionsAsked + 1);
+                updateTriviaBonusButton();
+                
+            } catch (error) {
+                console.error('Error fetching trivia:', error);
+            }
+        }
+
+        function decodeHtmlEntities(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+
+        function checkAnswer(button, correctAnswer) {
+            const buttons = document.querySelectorAll('.answer-button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (button.textContent.trim() === correctAnswer) {
+                button.classList.add('correct');
+                updateCoins(10);
+                
+                // Update trivia counter
+                const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
+                localStorage.setItem('triviaQuestionsAsked', questionsAsked + 1);
+                updateTriviaBonusButton();
+                
+                setTimeout(() => {
+                    document.getElementById('triviaModal').style.display = 'none';
+                }, 1500);
+            } else {
+                button.classList.add('incorrect');
+                buttons.forEach(btn => {
+                    if (btn.textContent.trim() === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                setTimeout(() => {
+                    document.getElementById('triviaModal').style.display = 'none';
+                }, 1500);
+            }
+        }
+
+        // Voeg deze helper functie toe om HTML entities te decoderen
+        function decodeHtmlEntities(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+
+        // Voeg deze nieuwe functies toe
+        function updateTriviaBonusButton() {
+            const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
+            const bonusButton = document.querySelector('.bonus-coin-button');
+            
+            if (questionsAsked >= MAX_TRIVIA_QUESTIONS) {
+                bonusButton.classList.add('disabled');
+                bonusButton.style.cursor = 'not-allowed';
+                bonusButton.onclick = null;
+            } else {
+                bonusButton.classList.remove('disabled');
+                bonusButton.style.cursor = 'pointer';
+                bonusButton.onclick = showTriviaQuestion;
+            }
+        }
+
+        // Voeg event listeners toe voor de bonus knop tooltip
+        document.querySelector('.bonus-coin-button').addEventListener('mouseover', (e) => {
+            const questionsAsked = parseInt(localStorage.getItem('triviaQuestionsAsked') || '0');
+            if (questionsAsked >= MAX_TRIVIA_QUESTIONS) {
+                showWarningTooltip('Voltooi eerst een wave om meer vragen te kunnen beantwoorden', e.pageX, e.pageY);
+            }
+        });
+
+        document.querySelector('.bonus-coin-button').addEventListener('mouseout', () => {
+            removeWarningTooltip();
         });
     </script>
 </body>
