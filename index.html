@@ -570,10 +570,15 @@
             left: 0;
         }
 
+        /* Voeg deze CSS toe voor de HP bar animaties */
         .hp-fill {
             height: 100%;
             background-color: #2ecc71;
-            transition: width 0.2s ease;
+            transition: width 0.2s ease-out;
+        }
+
+        .enemy .hp-fill {
+            transition: width calc(0.2s + var(--hp-transition-delay, 0s)) ease-out;
         }
 
         .king-hp-bar {
@@ -1827,9 +1832,14 @@
                         let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
                         target.dataset.health = enemyHealth;
                         
-                        // Update vijand HP bar
+                        // Update vijand HP bar met vertraagde animatie
                         const hpFill = target.querySelector('.hp-fill');
-                        const percentage = (enemyHealth / ENEMY_HP) * 100;
+                        const maxHP = waveConfig.hp; // Gebruik de max HP van de huidige wave
+                        const percentage = (enemyHealth / maxHP) * 100;
+                        
+                        // Bereken de vertraging gebaseerd op de max HP
+                        const transitionDelay = Math.min(maxHP / 50, 1); // Max 1 seconde vertraging
+                        hpFill.style.setProperty('--hp-transition-delay', `${transitionDelay}s`);
                         hpFill.style.width = percentage + '%';
                         
                         // Verander kleur gebaseerd op HP percentage
@@ -1909,6 +1919,12 @@
             // Stop alle lopende waves en intervals
             isWaveInProgress = false;
             document.querySelectorAll('.enemy').forEach(enemy => enemy.remove());
+            
+            // Reset localStorage
+            localStorage.removeItem('triviaQuestionsAsked');
+            
+            // Update UI elements
+            updateTriviaBonusButton();
         }
 
         function resetGame() {
@@ -2021,7 +2037,7 @@
                         </div>
                         <div class="tooltip-stat">
                             <span>Vuursnelheid:</span>
-                            <span>0.4s</span>
+                            <span>0.8s</span>
                         </div>
                         <div class="tooltip-stat">
                             <span>Bereik:</span>
@@ -2228,10 +2244,17 @@
                         let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
                         target.dataset.health = enemyHealth;
                         
+                        // Update vijand HP bar met vertraagde animatie
                         const hpFill = target.querySelector('.hp-fill');
-                        const percentage = (enemyHealth / ENEMY_HP) * 100;
+                        const maxHP = waveConfig.hp; // Gebruik de max HP van de huidige wave
+                        const percentage = (enemyHealth / maxHP) * 100;
+                        
+                        // Bereken de vertraging gebaseerd op de max HP
+                        const transitionDelay = Math.min(maxHP / 50, 1); // Max 1 seconde vertraging
+                        hpFill.style.setProperty('--hp-transition-delay', `${transitionDelay}s`);
                         hpFill.style.width = percentage + '%';
                         
+                        // Verander kleur gebaseerd op HP percentage
                         if (percentage > 60) {
                             hpFill.style.backgroundColor = '#2ecc71';
                         } else if (percentage > 30) {
@@ -2308,10 +2331,22 @@
         // Voeg deze event listeners toe aan het eind van het script
         const waveButton = document.querySelector('.wave-button');
 
-        waveButton.addEventListener('mouseover', () => {
+        // Update de wave button event listeners
+        waveButton.addEventListener('mouseover', (e) => {
             const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (activeCannons.length === 0 && !isWaveInProgress) {
-                showWarningTooltip('Je hebt geen actieve kanonnen!');
+                showWarningTooltip('Je hebt geen actieve kanonnen!', e.pageX, e.pageY);
+            }
+        });
+
+        waveButton.addEventListener('mousemove', (e) => {
+            const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
+            if (activeCannons.length === 0 && !isWaveInProgress) {
+                const warningTooltip = document.querySelector('.warning-tooltip');
+                if (warningTooltip) {
+                    warningTooltip.style.left = (e.pageX + 15) + 'px';
+                    warningTooltip.style.top = (e.pageY + 15) + 'px';
+                }
             }
         });
 
