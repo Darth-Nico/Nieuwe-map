@@ -716,6 +716,104 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .placed-double-cannon {
+            position: absolute;
+            width: 40px !important;
+            height: 20px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: linear-gradient(to bottom, #606060, #404040) !important;
+            border: 2px solid #000 !important;
+            z-index: 102;
+            transform-origin: center center;
+        }
+
+        .double-cannon-barrel {
+            position: absolute;
+            width: 12px;
+            height: 4px;
+            background-color: #303030;
+            border: 1px solid #000;
+        }
+
+        .double-cannon-barrel.top {
+            top: 30%;
+            left: 100%;
+            transform: translateY(-50%);
+        }
+
+        .double-cannon-barrel.bottom {
+            top: 70%;
+            left: 100%;
+            transform: translateY(-50%);
+        }
+
+        .broken-double-cannon {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: linear-gradient(to bottom, #404040, #202020);
+            border: 2px solid #000;
+            cursor: pointer;
+            z-index: 102;
+            filter: brightness(0.7);
+        }
+
+        .broken-double-cannon::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+        }
+
+        .broken-double-cannon::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .broken-double-cannon .broken-barrel {
+            position: absolute;
+            width: 12px;
+            height: 4px;
+            background-color: #202020;
+            border: 1px solid #000;
+            left: 100%;
+        }
+
+        .broken-double-cannon .broken-barrel.top {
+            top: 30%;
+            transform: translateY(-50%) rotate(5deg);
+        }
+
+        .broken-double-cannon .broken-barrel.bottom {
+            top: 70%;
+            transform: translateY(-50%) rotate(-5deg);
+        }
+
+        /* Update de CSS voor de range indicator */
+        .cannon-preview .range-indicator {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        /* Voeg een rode versie toe voor ongeldige plaatsing */
+        .cannon-preview.invalid .range-indicator {
+            background-color: rgba(231, 76, 60, 0.1);
+            border-color: rgba(231, 76, 60, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -818,13 +916,24 @@
     <button class="shop-toggle" onclick="toggleShop()">◀</button>
     <div class="shop-sidebar">
         <h2 style="color: #FFD700; font-size: 1.2rem; margin-bottom: 2rem;">Shop</h2>
-        <div class="shop-item" onclick="selectCannon()">
+        <div class="shop-item" onclick="selectCannon('single')">
             <div style="width: 40px; height: 20px; background-color: #606060; position: relative; border: 2px solid #000; box-shadow: 0 0 0 2px #FFD700; background: linear-gradient(to bottom, #707070, #505050);">
                 <div style="position: absolute; width: 12px; height: 6px; background-color: #404040; top: 50%; left: 100%; transform: translateY(-50%); border: 1px solid #000;"></div>
             </div>
             <div>
                 <div>Kanon</div>
                 <div style="font-size: 0.8rem;">50 <span style="color: #FFD700;">●</span></div>
+            </div>
+        </div>
+        
+        <div class="shop-item" onclick="selectCannon('double')" style="margin-top: 1rem;">
+            <div style="width: 40px; height: 20px; background-color: #4a4a4a; position: relative; border: 2px solid #000; box-shadow: 0 0 0 2px #FFD700; background: linear-gradient(to bottom, #606060, #404040);">
+                <div style="position: absolute; width: 12px; height: 4px; background-color: #303030; top: 30%; left: 100%; transform: translateY(-50%); border: 1px solid #000;"></div>
+                <div style="position: absolute; width: 12px; height: 4px; background-color: #303030; top: 70%; left: 100%; transform: translateY(-50%); border: 1px solid #000;"></div>
+            </div>
+            <div>
+                <div>Dubbel Kanon</div>
+                <div style="font-size: 0.8rem;">100 <span style="color: #FFD700;">●</span></div>
             </div>
         </div>
     </div>
@@ -923,6 +1032,11 @@
         const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
         const CANNON_DURABILITY = 5;
         const CANNON_REBUILD_COST = 30;
+        const DOUBLE_CANNON_COST = 100;
+        const DOUBLE_CANNON_DAMAGE = 4;
+        const DOUBLE_CANNON_DURABILITY = 8;
+        const DOUBLE_CANNON_REBUILD_COST = 50;
+        const DOUBLE_CANNON_FIRE_RATE = 600;
 
         // Voeg deze variabele toe bij de andere globale variabelen
         let playerCoins = STARTING_COINS;
@@ -1119,14 +1233,31 @@
             document.querySelector('.shop-toggle').textContent = isShopOpen ? '▶' : '◀';
         }
 
-        function selectCannon() {
-            if (playerCoins < CANNON_COST) return;
+        function selectCannon(type) {
+            const cost = type === 'double' ? DOUBLE_CANNON_COST : CANNON_COST;
+            if (playerCoins < cost) return;
             
-            selectedTower = 'cannon';
+            selectedTower = type;
             preview.style.display = 'block';
+            preview.className = `cannon-preview ${type}`;
+            
+            // Update preview HTML met range indicator
+            preview.innerHTML = `
+                <div class="range-indicator"></div>
+                <div class="preview-cannon">
+                    ${type === 'double' ? `
+                        <div class="preview-barrel top"></div>
+                        <div class="preview-barrel bottom"></div>
+                    ` : `
+                        <div class="preview-barrel"></div>
+                    `}
+                </div>
+            `;
+            
             document.querySelectorAll('.shop-item').forEach(item => {
-                item.classList.add('selected');
+                item.classList.remove('selected');
             });
+            event.currentTarget.classList.add('selected');
             
             gameMap.addEventListener('mousemove', movePreview);
             gameMap.addEventListener('click', placeCannon);
@@ -1139,6 +1270,7 @@
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
+            // Centreer de preview op de muis
             preview.style.left = x + 'px';
             preview.style.top = y + 'px';
 
@@ -1156,7 +1288,7 @@
             });
 
             // Check voor overlap met andere kanonnen
-            const cannons = document.querySelectorAll('.placed-cannon');
+            const cannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             cannons.forEach(cannon => {
                 const cannonRect = cannon.getBoundingClientRect();
                 const distance = Math.sqrt(
@@ -1164,34 +1296,41 @@
                     Math.pow((e.clientY - (cannonRect.top + cannonRect.height/2)), 2)
                 );
                 
-                if (distance < 40) { // 40px is de minimale afstand tussen kanonnen
+                if (distance < 40) {
                     canPlaceTower = false;
                 }
             });
 
-            preview.style.backgroundColor = canPlaceTower ? 
-                'rgba(90, 90, 90, 0.5)' : 
-                'rgba(255, 0, 0, 0.5)';
+            // Update preview appearance
+            if (canPlaceTower) {
+                preview.classList.remove('invalid');
+            } else {
+                preview.classList.add('invalid');
+            }
         }
 
         function placeCannon(e) {
-            if (!selectedTower || !canPlaceTower || playerCoins < CANNON_COST) return;
-
-            updateCoins(-CANNON_COST);
+            if (!selectedTower || !canPlaceTower) return;
+            
+            const cost = selectedTower === 'double' ? DOUBLE_CANNON_COST : CANNON_COST;
+            if (playerCoins < cost) return;
+            
+            updateCoins(-cost);
             
             const rect = gameMap.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
             const cannon = document.createElement('div');
-            cannon.className = 'placed-cannon';
+            cannon.className = selectedTower === 'double' ? 'placed-double-cannon' : 'placed-cannon';
             cannon.style.left = (x - 20) + 'px';
             cannon.style.top = (y - 10) + 'px';
             
-            // Voeg duurzaamheid toe
-            cannon.dataset.durability = CANNON_DURABILITY;
+            // Set durability based on type
+            cannon.dataset.durability = selectedTower === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            cannon.dataset.type = selectedTower;
 
-            // Voeg HP bar toe voor duurzaamheid
+            // Add HP bar
             const hpBar = document.createElement('div');
             hpBar.className = 'hp-bar';
             const hpFill = document.createElement('div');
@@ -1200,10 +1339,19 @@
             hpBar.appendChild(hpFill);
             cannon.appendChild(hpBar);
 
-            // Voeg alleen de loop toe
-            const barrel = document.createElement('div');
-            barrel.className = 'cannon-barrel';
-            cannon.appendChild(barrel);
+            // Add barrel(s)
+            if (selectedTower === 'double') {
+                const topBarrel = document.createElement('div');
+                topBarrel.className = 'double-cannon-barrel top';
+                const bottomBarrel = document.createElement('div');
+                bottomBarrel.className = 'double-cannon-barrel bottom';
+                cannon.appendChild(topBarrel);
+                cannon.appendChild(bottomBarrel);
+            } else {
+                const barrel = document.createElement('div');
+                barrel.className = 'cannon-barrel';
+                cannon.appendChild(barrel);
+            }
 
             // Richt het kanon initieel naar het pad
             const paths = document.querySelectorAll('.path, .path-curve');
@@ -1276,13 +1424,15 @@
                 
                 cannon.canShoot = false;
 
-                // Verminder duurzaamheid
-                let durability = parseInt(cannon.dataset.durability) - 1;
+                // Verminder duurzaamheid, voor dubbel kanon met 0.5 in plaats van 1
+                let durability = parseFloat(cannon.dataset.durability);
+                durability -= cannon.dataset.type === 'double' ? 0.5 : 1;
                 cannon.dataset.durability = durability;
                 
                 // Update duurzaamheid bar
                 const hpFill = cannon.querySelector('.hp-fill');
-                const percentage = (durability / CANNON_DURABILITY) * 100;
+                const maxDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+                const percentage = (durability / maxDurability) * 100;
                 hpFill.style.width = percentage + '%';
                 
                 // Verander kleur gebaseerd op duurzaamheid
@@ -1296,14 +1446,25 @@
                 
                 // Verwijder kanon als duurzaamheid op is
                 if (durability <= 0) {
-                    clearInterval(cannon.checkInterval);  // Clear het interval
+                    clearInterval(cannon.checkInterval);
                     setTimeout(() => {
-                        // Maak kapot kanon sprite aan
                         const brokenCannon = document.createElement('div');
-                        brokenCannon.className = 'broken-cannon';
+                        brokenCannon.className = cannon.dataset.type === 'double' ? 'broken-double-cannon' : 'broken-cannon';
                         brokenCannon.style.left = cannon.style.left;
                         brokenCannon.style.top = cannon.style.top;
                         brokenCannon.style.transform = cannon.style.transform;
+                        brokenCannon.dataset.type = cannon.dataset.type; // Bewaar het type
+                        
+                        // Voeg kapotte lopen toe voor dubbel kanon
+                        if (cannon.dataset.type === 'double') {
+                            const topBarrel = document.createElement('div');
+                            topBarrel.className = 'broken-barrel top';
+                            const bottomBarrel = document.createElement('div');
+                            bottomBarrel.className = 'broken-barrel bottom';
+                            brokenCannon.appendChild(topBarrel);
+                            brokenCannon.appendChild(bottomBarrel);
+                        }
+                        
                         brokenCannon.addEventListener('click', () => showRebuildModal(brokenCannon));
                         gameMap.appendChild(brokenCannon);
                         
@@ -1383,7 +1544,7 @@
                     if (cannon.isConnected) {
                         cannon.canShoot = true;
                     }
-                }, 800);
+                }, cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800);
             }
 
             // Start het interval en sla de interval ID op op het cannon object
@@ -1429,8 +1590,9 @@
             document.getElementById('coinDisplay').textContent = playerCoins;
             
             // Update shop items based on available coins
-            document.querySelectorAll('.shop-item').forEach(item => {
-                if (playerCoins < CANNON_COST) {
+            document.querySelectorAll('.shop-item').forEach((item, index) => {
+                const cost = index === 0 ? CANNON_COST : DOUBLE_CANNON_COST;
+                if (playerCoins < cost) {
                     item.classList.add('disabled');
                 } else {
                     item.classList.remove('disabled');
@@ -1498,45 +1660,76 @@
         }
 
         const tooltip = document.querySelector('.tooltip');
-        const shopItem = document.querySelector('.shop-item');
+        const shopItems = document.querySelectorAll('.shop-item');
+        shopItems.forEach(item => {
+            item.addEventListener('mousemove', (e) => {
+                const isDouble = item === shopItems[1]; // Check of dit het tweede item is (double cannon)
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.pageX + 15) + 'px';
+                tooltip.style.top = (e.pageY + 15) + 'px';
+                
+                if (isDouble) {
+                    tooltip.innerHTML = `
+                        <div class="tooltip-title">Dubbel Kanon Stats</div>
+                        <div class="tooltip-stat">
+                            <span>Schade:</span>
+                            <span>${DOUBLE_CANNON_DAMAGE} per loop</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Vuursnelheid:</span>
+                            <span>0.6s</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Bereik:</span>
+                            <span>100px</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Duurzaamheid:</span>
+                            <span>${DOUBLE_CANNON_DURABILITY} schoten</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Kosten:</span>
+                            <span>${DOUBLE_CANNON_COST} <span style="color: #FFD700;">●</span></span>
+                        </div>
+                    `;
+                } else {
+                    tooltip.innerHTML = `
+                        <div class="tooltip-title">Kanon Stats</div>
+                        <div class="tooltip-stat">
+                            <span>Schade:</span>
+                            <span>${CANNON_DAMAGE} per schot</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Vuursnelheid:</span>
+                            <span>0.8s</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Bereik:</span>
+                            <span>100px</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Duurzaamheid:</span>
+                            <span>${CANNON_DURABILITY} schoten</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Kosten:</span>
+                            <span>${CANNON_COST} <span style="color: #FFD700;">●</span></span>
+                        </div>
+                    `;
+                }
+            });
 
-        shopItem.addEventListener('mousemove', (e) => {
-            tooltip.style.display = 'block';
-            tooltip.style.left = (e.pageX + 15) + 'px';
-            tooltip.style.top = (e.pageY + 15) + 'px';
-            
-            tooltip.innerHTML = `
-                <div class="tooltip-title">Kanon Stats</div>
-                <div class="tooltip-stat">
-                    <span>Schade:</span>
-                    <span>${CANNON_DAMAGE} per schot</span>
-                </div>
-                <div class="tooltip-stat">
-                    <span>Vuursnelheid:</span>
-                    <span>0.8s</span>
-                </div>
-                <div class="tooltip-stat">
-                    <span>Bereik:</span>
-                    <span>100px</span>
-                </div>
-                <div class="tooltip-stat">
-                    <span>Duurzaamheid:</span>
-                    <span>${CANNON_DURABILITY} schoten</span>
-                </div>
-                <div class="tooltip-stat">
-                    <span>Kosten:</span>
-                    <span>${CANNON_COST} <span style="color: #FFD700;">●</span></span>
-                </div>
-            `;
-        });
-
-        shopItem.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
+            item.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+            });
         });
 
         // Voeg deze functies toe voor de rebuild functionaliteit
         function showRebuildModal(brokenCannon) {
-            if (isWaveInProgress) return; // Niet herbouwen tijdens een wave
+            if (isWaveInProgress) return;
+            
+            const isDouble = brokenCannon.dataset.type === 'double';
+            const cost = isDouble ? DOUBLE_CANNON_REBUILD_COST : CANNON_REBUILD_COST;
             
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -1545,7 +1738,7 @@
                 <div class="modal-content">
                     <h2 class="title" style="font-size: 1.5rem;">Herbouw Kanon</h2>
                     <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
-                        Wil je dit kanon herbouwen voor ${CANNON_REBUILD_COST} <span style="color: #FFD700;"></span>?
+                        Wil je dit kanon herbouwen voor ${cost} <span style="color: #FFD700;">●</span>?
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
                         <button class="menu-button" onclick="rebuildCannon(this)" style="margin: 0.5rem;">Ja</button>
@@ -1554,7 +1747,7 @@
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.brokenCannon = brokenCannon; // Bewaar referentie naar het kapotte kanon
+            modal.brokenCannon = brokenCannon;
         }
 
         function closeRebuildModal(button) {
@@ -1564,18 +1757,19 @@
         function rebuildCannon(button) {
             const modal = button.closest('.modal');
             const brokenCannon = modal.brokenCannon;
+            const isDouble = brokenCannon.dataset.type === 'double';
+            const cost = isDouble ? DOUBLE_CANNON_REBUILD_COST : CANNON_REBUILD_COST;
             
-            if (playerCoins < CANNON_REBUILD_COST) {
-                return;
-            }
+            if (playerCoins < cost) return;
             
             // Maak nieuw kanon aan op dezelfde plek
             const cannon = document.createElement('div');
-            cannon.className = 'placed-cannon';
+            cannon.className = isDouble ? 'placed-double-cannon' : 'placed-cannon';
             cannon.style.left = brokenCannon.style.left;
             cannon.style.top = brokenCannon.style.top;
-            cannon.style.transform = brokenCannon.style.transform; // Behoud rotatie
-            cannon.dataset.durability = CANNON_DURABILITY;
+            cannon.style.transform = brokenCannon.style.transform;
+            cannon.dataset.durability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            cannon.dataset.type = isDouble ? 'double' : 'single';
             cannon.canShoot = true;
 
             // Voeg HP bar toe
@@ -1588,9 +1782,18 @@
             cannon.appendChild(hpBar);
 
             // Voeg barrel toe
-            const barrel = document.createElement('div');
-            barrel.className = 'cannon-barrel';
-            cannon.appendChild(barrel);
+            if (isDouble) {
+                const topBarrel = document.createElement('div');
+                topBarrel.className = 'double-cannon-barrel top';
+                const bottomBarrel = document.createElement('div');
+                bottomBarrel.className = 'double-cannon-barrel bottom';
+                cannon.appendChild(topBarrel);
+                cannon.appendChild(bottomBarrel);
+            } else {
+                const barrel = document.createElement('div');
+                barrel.className = 'cannon-barrel';
+                cannon.appendChild(barrel);
+            }
 
             // Definieer checkTargets functie voor dit kanon
             function checkTargets() {
