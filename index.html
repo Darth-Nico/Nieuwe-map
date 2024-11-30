@@ -646,14 +646,26 @@
 
         .shop-item.disabled {
             opacity: 0.5;
-            cursor: not-allowed;
             filter: grayscale(100%);
-        }
-
-        .shop-toggle.disabled {
-            opacity: 0.5;
             cursor: not-allowed;
             pointer-events: none;
+            background: #5a5a5a !important; /* Override andere background colors */
+            border-color: #444 !important;
+        }
+
+        .shop-item.disabled:hover {
+            transform: none;
+            background-color: #5a5a5a !important;
+        }
+
+        /* Voor de healing knop specifiek */
+        .shop-item.healing.disabled {
+            background: linear-gradient(to right, #5a5a5a, #5a5a5a) !important;
+        }
+
+        /* Voor de boost knop specifiek */
+        .shop-item.boost.disabled {
+            background: linear-gradient(to right, #5a5a5a, #5a5a5a) !important;
         }
 
         .broken-cannon {
@@ -878,8 +890,26 @@
 
         .shop-item.disabled {
             opacity: 0.5;
-            cursor: not-allowed;
             filter: grayscale(100%);
+            cursor: not-allowed;
+            pointer-events: none;
+            background: #5a5a5a !important; /* Override andere background colors */
+            border-color: #444 !important;
+        }
+
+        .shop-item.disabled:hover {
+            transform: none;
+            background-color: #5a5a5a !important;
+        }
+
+        /* Voor de healing knop specifiek */
+        .shop-item.healing.disabled {
+            background: linear-gradient(to right, #5a5a5a, #5a5a5a) !important;
+        }
+
+        /* Voor de boost knop specifiek */
+        .shop-item.boost.disabled {
+            background: linear-gradient(to right, #5a5a5a, #5a5a5a) !important;
         }
 
         /* Voeg deze CSS toe */
@@ -1340,14 +1370,33 @@
         const BOOST_COST = 150;
         const BOOST_MULTIPLIER = 2; // Verander van 1.1 naar 2 voor een verdubbeling
 
+        // Voeg deze functie toe
+        function updateBoostButtonStatus() {
+            const boostItem = document.querySelector('.shop-item.boost');
+            const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
+            
+            if (boostItem) {
+                if (activeCannons.length === 0 || playerCoins < BOOST_COST) {
+                    boostItem.classList.add('disabled');
+                    boostItem.style.cursor = 'not-allowed';
+                    boostItem.onclick = null;
+                } else {
+                    boostItem.classList.remove('disabled');
+                    boostItem.style.cursor = 'pointer';
+                    boostItem.onclick = buyCannonBoost;
+                }
+            }
+        }
+
         // Update de startGame functie
         function startGame() {
             document.querySelector('.game-container').style.display = 'none';
             document.getElementById('gameView').style.display = 'block';
-            document.querySelector('.shop-toggle').style.display = 'block'; // Toon de shop toggle
+            document.querySelector('.shop-toggle').style.display = 'block';
             document.querySelector('.bonus-coin-button').style.display = 'flex';
             updateTriviaBonusButton();
             updateCoins(0);
+            updateBoostButtonStatus(); // Voeg deze regel toe
         }
 
         function showInstructions() {
@@ -1438,11 +1487,7 @@
         function updateHealingItemStatus() {
             const healingItem = document.querySelector('.shop-item.healing');
             if (healingItem) {
-                if (kingHealth >= 100) {
-                    healingItem.classList.add('disabled');
-                    healingItem.style.cursor = 'not-allowed';
-                    healingItem.onclick = null;
-                } else if (playerCoins < HEALING_COST) {
+                if (kingHealth >= 100 || playerCoins < HEALING_COST) {
                     healingItem.classList.add('disabled');
                     healingItem.style.cursor = 'not-allowed';
                     healingItem.onclick = null;
@@ -1453,11 +1498,10 @@
                 }
                 }
             }
-        
 
         // Update de updateCoins functie
         function updateCoins(amount) {
-            if (amount < 0 && soundEnabled) { // Alleen afspelen bij uitgaven
+            if (amount < 0 && soundEnabled) {
                 const purchaseSound = document.getElementById('purchaseSound');
                 purchaseSound.currentTime = 0;
                 purchaseSound.play().catch(error => console.log("Audio afspelen mislukt:", error));
@@ -1467,11 +1511,13 @@
             document.getElementById('coinDisplay').textContent = playerCoins;
             
             // Update shop items based on available coins
-            document.querySelectorAll('.shop-item').forEach((item, index) => {
+            document.querySelectorAll('.shop-item').forEach((item) => {
                 if (item.classList.contains('healing')) {
-                    updateHealingItemStatus(); // Update healing item apart
+                    updateHealingItemStatus();
+                } else if (item.classList.contains('boost')) {
+                    updateBoostButtonStatus();
                 } else {
-                    const cost = index === 0 ? CANNON_COST : DOUBLE_CANNON_COST;
+                    const cost = item === document.querySelectorAll('.shop-item')[0] ? CANNON_COST : DOUBLE_CANNON_COST;
                     if (playerCoins < cost) {
                         item.classList.add('disabled');
                     } else {
@@ -2008,6 +2054,7 @@
             cannon.checkInterval = setInterval(checkTargets, 100);
 
             gameMap.appendChild(cannon);
+            updateBoostButtonStatus(); // Voeg deze regel toe
 
             // Reset selectie
             selectedTower = null;
@@ -2565,21 +2612,17 @@
         function showDisabledReason(item, event) {
             let reason = '';
             
-            // Bepaal de reden waarom het item disabled is
-            if (item.classList.contains('healing')) {
-                if (kingHealth >= 100) {
-                    reason = 'Koning heeft volledige gezondheid';
-                }
-            } else if (isWaveInProgress) {
+            // Verwijder de healing check en toon alleen waarschuwingen voor niet-healing items
+            if (!item.classList.contains('healing')) {
+                if (isWaveInProgress) {
                 reason = 'Kan geen kanonnen kopen tijdens een wave';
-            }
-            
-            if (playerCoins < getItemCost(item)) {
+                } else if (playerCoins < getItemCost(item)) {
                 reason = 'Niet genoeg munten';
             }
 
             if (reason) {
                 showWarningTooltip(reason, event.pageX, event.pageY);
+                }
             }
         }
 
