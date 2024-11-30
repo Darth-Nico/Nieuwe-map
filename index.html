@@ -969,6 +969,30 @@
             0% { transform: scale(1); opacity: 0.6; }
             100% { transform: scale(2); opacity: 0; }
         }
+
+        /* Voeg deze CSS toe voor de numerieke waardes */
+        .hp-numbers {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 8px;
+            font-family: 'Press Start 2P', cursive;
+            text-shadow: 1px 1px 1px #000;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .king-hp-numbers {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 10px;
+            font-family: 'Press Start 2P', cursive;
+            text-shadow: 1px 1px 1px #000;
+            top: -20px;
+        }
     </style>
 </head>
 <body>
@@ -1355,16 +1379,24 @@
             const percentage = (kingHealth / 100) * 100;
             fillElement.style.width = percentage + '%';
             
+            // Update of maak de numerieke waarde
+            let hpNumbers = document.querySelector('.king-hp-numbers');
+            if (!hpNumbers) {
+                hpNumbers = document.createElement('div');
+                hpNumbers.className = 'king-hp-numbers';
+                document.querySelector('.king-hp-bar').appendChild(hpNumbers);
+            }
+            hpNumbers.textContent = `${kingHealth}/100 HP`;
+            
             // Verander kleur gebaseerd op HP percentage
             if (percentage > 60) {
-                fillElement.style.backgroundColor = '#2ecc71'; // Groen
+                fillElement.style.backgroundColor = '#2ecc71';
             } else if (percentage > 30) {
-                fillElement.style.backgroundColor = '#f1c40f'; // Geel
+                fillElement.style.backgroundColor = '#f1c40f';
             } else {
-                fillElement.style.backgroundColor = '#e74c3c'; // Rood
+                fillElement.style.backgroundColor = '#e74c3c';
             }
 
-            // Update healing item status
             updateHealingItemStatus();
         }
 
@@ -1447,22 +1479,30 @@
                 const enemy = document.createElement('div');
                 enemy.className = 'enemy';
                 enemy.style.animation = `followPath ${waveConfig.speed}s linear`;
-                enemy.dataset.health = waveConfig.hp; // Gebruik de nieuwe HP waarde
+                enemy.dataset.health = waveConfig.hp;
 
-                // Voeg HP bar toe aan vijand
+                // Maak eerst de enemy image
+                const enemyImg = document.createElement('img');
+                enemyImg.src = 'assets/patato-knight.png';
+                enemyImg.alt = 'Enemy';
+                enemy.appendChild(enemyImg); // Voeg de image eerst toe
+
+                // Daarna de HP bar
                 const hpBar = document.createElement('div');
                 hpBar.className = 'hp-bar';
                 const hpFill = document.createElement('div');
                 hpFill.className = 'hp-fill';
                 hpFill.style.width = '100%';
-                hpBar.appendChild(hpFill);
-                enemy.appendChild(hpBar);
-
-                const enemyImg = document.createElement('img');
-                enemyImg.src = 'assets/patato-knight.png';
-                enemyImg.alt = 'Enemy';
                 
-                enemy.appendChild(enemyImg);
+                // Voeg numerieke waarde toe
+                const hpNumbers = document.createElement('div');
+                hpNumbers.className = 'hp-numbers';
+                hpNumbers.textContent = `${waveConfig.hp}/${waveConfig.hp}`;
+                
+                hpBar.appendChild(hpFill);
+                hpBar.appendChild(hpNumbers);
+                enemy.appendChild(hpBar); // Voeg de HP bar als laatste toe
+                
                 document.querySelector('.game-map').appendChild(enemy);
                 
                 enemy.addEventListener('animationend', () => {
@@ -1696,7 +1736,15 @@
             const hpFill = document.createElement('div');
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
+            
+            // Voeg numerieke waarde toe
+            const hpNumbers = document.createElement('div');
+            hpNumbers.className = 'hp-numbers';
+            const maxDurability = selectedTower === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            hpNumbers.textContent = `${maxDurability}/${maxDurability}`;
+            
             hpBar.appendChild(hpFill);
+            hpBar.appendChild(hpNumbers);
             cannon.appendChild(hpBar);
 
             // Add barrel(s)
@@ -1790,11 +1838,14 @@
                 durability -= cannon.dataset.type === 'double' ? 0.5 : 1;
                 cannon.dataset.durability = durability;
                 
-                // Update duurzaamheid bar
+                // Update duurzaamheid bar en numerieke waarde
                 const hpFill = cannon.querySelector('.hp-fill');
+                const hpNumbers = cannon.querySelector('.hp-numbers');
                 const maxDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
                 const percentage = (durability / maxDurability) * 100;
+                
                 hpFill.style.width = percentage + '%';
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`;
                 
                 // Verander kleur gebaseerd op duurzaamheid
                 if (percentage > 60) {
@@ -1870,18 +1921,17 @@
 
                 bullet.addEventListener('animationend', () => {
                     if (target.isConnected) {
-                        let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
+                        let enemyHealth = parseInt(target.dataset.health) - (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE);
                         target.dataset.health = enemyHealth;
                         
-                        // Update vijand HP bar met vertraagde animatie
+                        // Update vijand HP bar met numerieke waarde
                         const hpFill = target.querySelector('.hp-fill');
-                        const maxHP = waveConfig.hp; // Gebruik de max HP van de huidige wave
+                        const hpNumbers = target.querySelector('.hp-numbers');
+                        const maxHP = waveConfig.hp;
                         const percentage = (enemyHealth / maxHP) * 100;
                         
-                        // Bereken de vertraging gebaseerd op de max HP
-                        const transitionDelay = Math.min(maxHP / 50, 1); // Max 1 seconde vertraging
-                        hpFill.style.setProperty('--hp-transition-delay', `${transitionDelay}s`);
                         hpFill.style.width = percentage + '%';
+                        hpNumbers.textContent = `${Math.max(0, enemyHealth)}/${maxHP}`;
                         
                         // Verander kleur gebaseerd op HP percentage
                         if (percentage > 60) {
@@ -1892,8 +1942,9 @@
                             hpFill.style.backgroundColor = '#e74c3c';
                         }
                         
+                        // Check of de vijand dood is
                         if (enemyHealth <= 0) {
-                            target.remove();
+                            target.remove(); // Verwijder de vijand
                             enemiesKilled++;
                             updateCoins(COINS_PER_KILL);
                             
@@ -2285,34 +2336,16 @@
                         let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
                         target.dataset.health = enemyHealth;
                         
-                        // Update vijand HP bar met vertraagde animatie
+                        // Update vijand HP bar met numerieke waarde
                         const hpFill = target.querySelector('.hp-fill');
-                        const maxHP = waveConfig.hp; // Gebruik de max HP van de huidige wave
+                        const hpNumbers = target.querySelector('.hp-numbers');
+                        const maxHP = waveConfig.hp;
                         const percentage = (enemyHealth / maxHP) * 100;
                         
-                        // Bereken de vertraging gebaseerd op de max HP
-                        const transitionDelay = Math.min(maxHP / 50, 1); // Max 1 seconde vertraging
-                        hpFill.style.setProperty('--hp-transition-delay', `${transitionDelay}s`);
                         hpFill.style.width = percentage + '%';
+                        hpNumbers.textContent = `${Math.max(0, enemyHealth)}/${maxHP}`;
                         
-                        // Verander kleur gebaseerd op HP percentage
-                        if (percentage > 60) {
-                            hpFill.style.backgroundColor = '#2ecc71';
-                        } else if (percentage > 30) {
-                            hpFill.style.backgroundColor = '#f1c40f';
-                        } else {
-                            hpFill.style.backgroundColor = '#e74c3c';
-                        }
-                        
-                        if (enemyHealth <= 0) {
-                            target.remove();
-                            enemiesKilled++;
-                            updateCoins(COINS_PER_KILL);
-                            
-                            if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
-                                endWave();
-                            }
-                        }
+                        // ... (rest van de code) ...
                     }
                     bullet.remove();
                 });
