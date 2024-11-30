@@ -575,6 +575,15 @@
     </style>
 </head>
 <body>
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 class="title" style="font-size: 1.5rem; color: #e74c3c;">Game Over!</h2>
+            <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
+                De koning is verslagen!
+            </div>
+            <button class="menu-button" onclick="backToMenu()">Menu</button>
+        </div>
+    </div>
     <div class="background">
         <div class="clouds">
             <div class="cloud"></div>
@@ -637,6 +646,9 @@
 
         <!-- Game UI -->
         <div class="game-ui">
+            <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
+                Coins: <span id="coinDisplay">150</span>
+            </div>
             <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 0.8rem;">
                 Wave: <span id="waveNumber">1</span>
                 <div id="waveStatus" style="margin-top: 0.5rem; font-size: 0.7rem;">Klaar om te starten</div>
@@ -652,6 +664,8 @@
                 <div>Vijanden verslagen: <span id="enemiesDefeatedStat">0</span></div>
                 <div>Vijanden doorgekomen: <span id="enemiesLeakedStat">0</span></div>
                 <div>Koning HP: <span id="kingHealthStat">100</span>/100</div>
+                <div>Coins verdiend (kills): <span id="coinsEarnedStat">0</span> <span style="color: #FFD700;">●</span></div>
+                <div>Wave bonus: <span id="waveBonusStat">50</span> <span style="color: #FFD700;">●</span></div>
             </div>
             <button class="menu-button" style="margin-top: 1rem;" onclick="closeWaveCompletion()">Doorgaan</button>
         </div>
@@ -664,7 +678,7 @@
             <div style="width: 40px; height: 40px; background-color: #808080;"></div>
             <div>
                 <div>Kanon</div>
-                <div style="font-size: 0.8rem;">Kosten: 100</div>
+                <div style="font-size: 0.8rem;">Kosten: 50 <span style="color: #FFD700;">●</span></div>
             </div>
         </div>
     </div>
@@ -690,10 +704,20 @@
         const ENEMY_HP = 10;     // HP van de vijanden
         const CANNON_DAMAGE = 2; // Schade van het kanon
 
+        // Voeg deze constanten toe aan het begin van het script waar de andere constanten staan
+        const STARTING_COINS = 150;
+        const CANNON_COST = 50;
+        const COINS_PER_KILL = 15;
+        const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
+
+        // Voeg deze variabele toe bij de andere globale variabelen
+        let playerCoins = STARTING_COINS;
+
         function startGame() {
             document.querySelector('.game-container').style.display = 'none';
             document.getElementById('gameView').style.display = 'block';
             document.querySelector('.shop-toggle').style.display = 'block';
+            updateCoins(0); // Update initial coins display
         }
 
         function showInstructions() {
@@ -804,8 +828,7 @@
                     updateKingHealth(); // Update koning HP bar
                     
                     if (kingHealth <= 0) {
-                        alert('Game Over! De koning is verslagen!');
-                        location.reload();
+                        showGameOver();  // Vervang alert met showGameOver
                         return;
                     }
                     
@@ -833,6 +856,12 @@
             document.getElementById('enemiesDefeatedStat').textContent = enemiesKilled;
             document.getElementById('enemiesLeakedStat').textContent = enemiesFinished;
             document.getElementById('kingHealthStat').textContent = kingHealth;
+            document.getElementById('coinsEarnedStat').textContent = enemiesKilled * COINS_PER_KILL;
+            document.getElementById('waveBonusStat').textContent = WAVE_BONUS;
+            
+            // Voeg de wave bonus toe aan de coins
+            updateCoins(WAVE_BONUS);
+            
             waveCompletionModal.style.display = "flex";
         }
 
@@ -864,13 +893,16 @@
         }
 
         function selectCannon() {
+            if (playerCoins < CANNON_COST) {
+                alert('Niet genoeg coins!');
+                return;
+            }
             selectedTower = 'cannon';
             preview.style.display = 'block';
             document.querySelectorAll('.shop-item').forEach(item => {
                 item.classList.add('selected');
             });
             
-            // Voeg mouse move event toe
             gameMap.addEventListener('mousemove', movePreview);
             gameMap.addEventListener('click', placeCannon);
         }
@@ -918,8 +950,10 @@
         }
 
         function placeCannon(e) {
-            if (!selectedTower || !canPlaceTower) return;
+            if (!selectedTower || !canPlaceTower || playerCoins < CANNON_COST) return;
 
+            updateCoins(-CANNON_COST); // Trek kosten af
+            
             const rect = gameMap.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -1066,10 +1100,9 @@
                         if (enemyHealth <= 0) {
                             target.remove();
                             enemiesKilled++;
+                            updateCoins(COINS_PER_KILL); // Voeg coins toe voor kill
                             
-                            if (typeof waveConfig !== 'undefined' && 
-                                waveConfig !== null && 
-                                enemiesKilled + enemiesFinished === waveConfig.enemies) {
+                            if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
                                 endWave();
                             }
                         }
@@ -1116,6 +1149,71 @@
 
         // Initialiseer koning HP bar
         updateKingHealth();
+
+        // Voeg deze functie toe
+        function updateCoins(amount) {
+            playerCoins += amount;
+            document.getElementById('coinDisplay').textContent = playerCoins;
+        }
+
+        // Voeg deze functies toe
+        function showGameOver() {
+            const gameOverModal = document.getElementById('gameOverModal');
+            gameOverModal.style.display = "flex";
+            document.getElementById('finalWave').textContent = currentWave;
+            document.getElementById('totalEnemiesDefeated').textContent = enemiesKilled;
+            
+            // Stop alle lopende waves en intervals
+            isWaveInProgress = false;
+            document.querySelectorAll('.enemy').forEach(enemy => enemy.remove());
+        }
+
+        function resetGame() {
+            // Reset alle game variabelen
+            currentWave = 1;
+            isWaveInProgress = false;
+            enemiesKilled = 0;
+            enemiesFinished = 0;
+            kingHealth = STARTING_KING_HP;
+            playerCoins = STARTING_COINS;
+            
+            // Verwijder alle kanonnen
+            document.querySelectorAll('.placed-cannon').forEach(cannon => cannon.remove());
+            
+            // Verwijder alle vijanden
+            document.querySelectorAll('.enemy').forEach(enemy => enemy.remove());
+            
+            // Reset UI
+            updateWaveNumber();
+            updateKingHealth();
+            updateCoins(0);
+            updateWaveStatus("Klaar om te starten");
+            
+            // Reset wave button
+            const waveButton = document.querySelector('.wave-button');
+            waveButton.classList.remove('disabled');
+            
+            // Reset shop
+            document.querySelector('.shop-sidebar').classList.remove('open');
+            document.querySelector('.shop-toggle').textContent = '◀';
+            isShopOpen = false;
+            
+            // Reset preview
+            selectedTower = null;
+            preview.style.display = 'none';
+            document.querySelectorAll('.shop-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Verwijder eventuele event listeners
+            gameMap.removeEventListener('mousemove', movePreview);
+            gameMap.removeEventListener('click', placeCannon);
+        }
+
+        function backToMenu() {
+            // Ververs de pagina
+            location.reload();
+        }
     </script>
 </body>
 </html> 
