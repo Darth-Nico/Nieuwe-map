@@ -1207,8 +1207,8 @@
         function startWave() {
             if (isWaveInProgress) return;
             
-            // Check voor actieve kanonnen
-            const activeCannons = document.querySelectorAll('.placed-cannon');
+            // Update de check voor actieve kanonnen om beide types te includeren
+            const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (activeCannons.length === 0) {
                 return;
             }
@@ -1216,9 +1216,6 @@
             console.log(`Wave ${currentWave} gestart!`);
             isWaveInProgress = true;
             updateWaveStatus("Wave in progress...");
-            
-            // Verwijder deze regel die de shop-toggle uitschakelt
-            // document.querySelector('.shop-toggle').classList.add('disabled');
             
             // Update shop items voor combat/non-combat
             updateShopDuringWave(true);
@@ -2148,7 +2145,7 @@
         const waveButton = document.querySelector('.wave-button');
 
         waveButton.addEventListener('mouseover', () => {
-            const activeCannons = document.querySelectorAll('.placed-cannon');
+            const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (activeCannons.length === 0 && !isWaveInProgress) {
                 showWarningTooltip('Je hebt geen actieve kanonnen!');
             }
