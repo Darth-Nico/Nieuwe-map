@@ -955,6 +955,20 @@
             background-color: #e74c3c;
             color: #fff;
         }
+
+        .shop-item.boost {
+            background: linear-gradient(to right, #5a5a5a, #9b59b6);
+        }
+
+        .shop-item.boost:hover {
+            background: linear-gradient(to right, #6a6a6a, #8e44ad);
+        }
+
+        /* Voeg deze CSS toe voor de boost animatie */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(2); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -1090,6 +1104,18 @@
             <div>
                 <div>Genezing</div>
                 <div style="font-size: 0.8rem;">30 <span style="color: #FFD700;">●</span></div>
+            </div>
+        </div>
+
+        <!-- Voeg deze nieuwe sectie toe in de shop-sidebar, na de Koning Support sectie -->
+        <div class="shop-category" style="margin-top: 2rem;">Specials</div>
+        <div class="shop-item boost" onclick="buyCannonBoost()" style="margin-top: 1rem;">
+            <div style="width: 40px; height: 40px; background-color: rgba(155, 89, 182, 0.2); position: relative; border: 2px solid #9b59b6; display: flex; justify-content: center; align-items: center;">
+                <span style="color: #9b59b6; font-size: 1.5rem;">↑</span>
+            </div>
+            <div>
+                <div>Kanon Boost</div>
+                <div style="font-size: 0.8rem;">150 <span style="color: #FFD700;">●</span></div>
             </div>
         </div>
     </div>
@@ -1247,6 +1273,10 @@
         // Voeg deze constanten toe bovenaan het script
         const MAX_TRIVIA_QUESTIONS = 3;
         const TRIVIA_RESET_WAVE = 1;
+
+        // Voeg deze constanten toe
+        const BOOST_COST = 150;
+        const BOOST_MULTIPLIER = 1.1; // 10% boost
 
         // Update de startGame functie
         function startGame() {
@@ -1502,8 +1532,9 @@
                     showWaveCompletion(4);
                     updateWaveStatus("Alle waves voltooid!");
                 }
+                }
             }
-        }
+        
 
         let isShopOpen = false;
         let selectedTower = null;
@@ -2549,6 +2580,87 @@
 
         document.querySelector('.bonus-coin-button').addEventListener('mouseout', () => {
             removeWarningTooltip();
+        });
+
+        // Voeg deze functie toe
+        function buyCannonBoost() {
+            if (playerCoins < BOOST_COST) return;
+            
+            // Verzamel alle actieve kanonnen
+            const cannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
+            if (cannons.length === 0) {
+                showWarningTooltip('Er zijn geen kanonnen om te boosten!');
+                return;
+            }
+            
+            updateCoins(-BOOST_COST);
+            
+            // Boost alle kanonnen
+            cannons.forEach(cannon => {
+                // Boost damage
+                const currentDamage = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
+                cannon.dataset.damage = Math.floor(currentDamage * BOOST_MULTIPLIER);
+                
+                // Boost durability
+                const maxDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+                const currentDurability = parseFloat(cannon.dataset.durability);
+                const newMaxDurability = Math.floor(maxDurability * BOOST_MULTIPLIER);
+                cannon.dataset.durability = Math.floor(currentDurability * BOOST_MULTIPLIER);
+                
+                // Boost fire rate (verlaag de interval tijd)
+                const currentFireRate = cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800;
+                cannon.dataset.fireRate = Math.floor(currentFireRate / BOOST_MULTIPLIER);
+                
+                // Visueel effect voor de boost
+                const boostEffect = document.createElement('div');
+                boostEffect.style.cssText = `
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    background: radial-gradient(circle, rgba(155, 89, 182, 0.6) 0%, transparent 70%);
+                    animation: pulse 1s ease-out;
+                    pointer-events: none;
+                `;
+                cannon.appendChild(boostEffect);
+                setTimeout(() => boostEffect.remove(), 1000);
+            });
+        }
+
+        // Voeg deze CSS toe voor de boost animatie
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); opacity: 0.6; }
+                100% { transform: scale(2); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Update de tooltip voor het boost item
+        shopItems.forEach(item => {
+            item.addEventListener('mousemove', (e) => {
+                if (item.classList.contains('boost')) {
+                    tooltip.innerHTML = `
+                        <div class="tooltip-title">Kanon Boost</div>
+                        <div class="tooltip-stat">
+                            <span>Effect:</span>
+                            <span>+10% alle stats</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Boost:</span>
+                            <span>Schade, Vuursnelheid, Duurzaamheid</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Geldt voor:</span>
+                            <span>Alle geplaatste kanonnen</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span>Kosten:</span>
+                            <span>${BOOST_COST} <span style="color: #FFD700;">●</span></span>
+                        </div>
+                    `;
+                }
+            });
         });
     </script>
 </body>
