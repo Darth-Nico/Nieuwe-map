@@ -454,10 +454,16 @@
             z-index: 103;
         }
 
+        .cannon-preview.invalid {
+            background-color: rgba(231, 76, 60, 0.5);
+            border: 2px solid rgba(231, 76, 60, 0.8);
+        }
+
+        /* Update de bestaande cannon-radius class */
         .cannon-radius {
             position: absolute;
-            width: 200px;
-            height: 200px;
+            width: var(--radius-size); /* Dynamische radius grootte */
+            height: var(--radius-size); /* Dynamische radius grootte */
             background-color: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
@@ -1241,9 +1247,12 @@
             preview.style.display = 'block';
             preview.className = `cannon-preview ${type}`;
             
-            // Update preview HTML met range indicator
+            // Stel verschillende radius groottes in voor verschillende kanonnen
+            const radiusSize = type === 'double' ? '160px' : '240px';
+            
+            // Update preview HTML met alleen cannon-radius
             preview.innerHTML = `
-                <div class="range-indicator"></div>
+                <div class="cannon-radius" style="--radius-size: ${radiusSize};"></div>
                 <div class="preview-cannon">
                     ${type === 'double' ? `
                         <div class="preview-barrel top"></div>
@@ -1392,6 +1401,7 @@
                 const cannonRect = cannon.getBoundingClientRect();
                 const cannonCenterX = cannonRect.left + cannonRect.width / 2;
                 const cannonCenterY = cannonRect.top + cannonRect.height / 2;
+                const radius = cannon.dataset.type === 'double' ? 80 : 120; // Verschillende radius per type
 
                 const enemies = document.querySelectorAll('.enemy');
                 for (const enemy of enemies) {
@@ -1802,6 +1812,7 @@
                 const cannonRect = cannon.getBoundingClientRect();
                 const cannonCenterX = cannonRect.left + cannonRect.width / 2;
                 const cannonCenterY = cannonRect.top + cannonRect.height / 2;
+                const radius = cannon.dataset.type === 'double' ? 80 : 120; // Verschillende radius per type
 
                 const enemies = document.querySelectorAll('.enemy');
                 for (const enemy of enemies) {
@@ -1816,7 +1827,7 @@
                         Math.pow(enemyCenterY - cannonCenterY, 2)
                     );
 
-                    if (distance <= 100 && cannon.canShoot) {
+                    if (distance <= radius && cannon.canShoot) {
                         const angle = Math.atan2(
                             enemyCenterY - cannonCenterY,
                             enemyCenterX - cannonCenterX
