@@ -612,6 +612,62 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+
+        .broken-cannon {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: linear-gradient(to bottom, #505050, #303030);
+            border: 2px solid #000;
+            cursor: pointer;
+            z-index: 102;
+            filter: brightness(0.7);
+        }
+
+        .broken-cannon::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 45%, #000 45%, #000 55%, transparent 55%),
+                linear-gradient(-45deg, transparent 45%, #000 45%, #000 55%, transparent 55%);
+        }
+
+        .broken-cannon::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 6px;
+            background-color: #202020;
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%);
+            border: 1px solid #000;
+        }
+
+        .broken-cannon:hover {
+            filter: brightness(0.9);
+        }
+
+        @keyframes break-apart {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(5deg);
+                opacity: 0.8;
+            }
+            100% { 
+                transform: scale(1) rotate(10deg);
+                opacity: 0.7;
+            }
+        }
+
+        .broken-cannon {
+            animation: break-apart 0.3s ease-out forwards;
+        }
     </style>
 </head>
 <body>
@@ -776,6 +832,7 @@
         const COINS_PER_KILL = 15;
         const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
         const CANNON_DURABILITY = 5;
+        const CANNON_REBUILD_COST = 30;
 
         // Voeg deze variabele toe bij de andere globale variabelen
         let playerCoins = STARTING_COINS;
@@ -1142,6 +1199,15 @@
                 if (durability <= 0) {
                     clearInterval(cannon.checkInterval);  // Clear het interval
                     setTimeout(() => {
+                        // Maak kapot kanon sprite aan
+                        const brokenCannon = document.createElement('div');
+                        brokenCannon.className = 'broken-cannon';
+                        brokenCannon.style.left = cannon.style.left;
+                        brokenCannon.style.top = cannon.style.top;
+                        brokenCannon.style.transform = cannon.style.transform;
+                        brokenCannon.addEventListener('click', () => showRebuildModal(brokenCannon));
+                        gameMap.appendChild(brokenCannon);
+                        
                         cannon.remove();
                     }, 200);
                 }
@@ -1368,6 +1434,79 @@
         shopItem.addEventListener('mouseleave', () => {
             tooltip.style.display = 'none';
         });
+
+        // Voeg deze functies toe voor de rebuild functionaliteit
+        function showRebuildModal(brokenCannon) {
+            if (isWaveInProgress) return; // Niet herbouwen tijdens een wave
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h2 class="title" style="font-size: 1.5rem;">Herbouw Kanon</h2>
+                    <div style="color: #FFD700; margin: 1rem 0; text-align: center; font-size: 0.9rem;">
+                        Wil je dit kanon herbouwen voor ${CANNON_REBUILD_COST} <span style="color: #FFD700;">●</span>?
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                        <button class="menu-button" onclick="rebuildCannon(this)" style="margin: 0.5rem;">Ja</button>
+                        <button class="menu-button" onclick="closeRebuildModal(this)" style="margin: 0.5rem;">Nee</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.brokenCannon = brokenCannon; // Bewaar referentie naar het kapotte kanon
+        }
+
+        function closeRebuildModal(button) {
+            button.closest('.modal').remove();
+        }
+
+        function rebuildCannon(button) {
+            const modal = button.closest('.modal');
+            const brokenCannon = modal.brokenCannon;
+            
+            if (playerCoins < CANNON_REBUILD_COST) {
+                return;
+            }
+            
+            // Maak nieuw kanon aan op dezelfde plek
+            const cannon = document.createElement('div');
+            cannon.className = 'placed-cannon';
+            cannon.style.left = brokenCannon.style.left;
+            cannon.style.top = brokenCannon.style.top;
+            cannon.dataset.durability = CANNON_DURABILITY;
+            cannon.canShoot = true;
+
+            // Voeg HP bar toe
+            const hpBar = document.createElement('div');
+            hpBar.className = 'hp-bar';
+            const hpFill = document.createElement('div');
+            hpFill.className = 'hp-fill';
+            hpFill.style.width = '100%';
+            hpBar.appendChild(hpFill);
+            cannon.appendChild(hpBar);
+
+            // Voeg barrel toe
+            const barrel = document.createElement('div');
+            barrel.className = 'cannon-barrel';
+            cannon.appendChild(barrel);
+
+            // Start het interval voor het nieuwe kanon
+            cannon.checkInterval = setInterval(() => {
+                checkTargets.call(cannon);
+            }, 100);
+
+            // Verwijder kapot kanon en plaats nieuw kanon
+            brokenCannon.remove();
+            gameMap.appendChild(cannon);
+            
+            // Trek kosten af
+            updateCoins(-CANNON_REBUILD_COST);
+            
+            // Sluit modal
+            modal.remove();
+        }
     </script>
 </body>
 </html> 
