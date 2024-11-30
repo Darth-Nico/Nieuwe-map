@@ -1101,7 +1101,7 @@
         <!-- Game UI -->
         <div class="game-ui">
             <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.5rem;">
-                <span id="coinDisplay">150</span> 
+                <span id="coinDisplay">200</span> 
                 <img src="assets/coin.png" alt="coins" class="coin-icon">
             </div>
             <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.2rem;">
@@ -1313,7 +1313,7 @@
         const CANNON_DAMAGE = 4; // Schade van het kanon
 
         // Voeg deze constanten toe aan het begin van het script waar de andere constanten staan
-        const STARTING_COINS = 150;
+        const STARTING_COINS = 200;
         const CANNON_COST = 50;
         const COINS_PER_KILL = 15;
         const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
@@ -1338,7 +1338,7 @@
 
         // Voeg deze constanten toe
         const BOOST_COST = 150;
-        const BOOST_MULTIPLIER = 1.1; // 10% boost
+        const BOOST_MULTIPLIER = 2; // Verander van 1.1 naar 2 voor een verdubbeling
 
         // Update de startGame functie
         function startGame() {
@@ -1867,19 +1867,24 @@
                 
                 cannon.canShoot = false;
 
-                // Verminder duurzaamheid, voor dubbel kanon met 0.5 in plaats van 1
+                // Gebruik de gebooste waardes uit de dataset
+                const damage = parseInt(cannon.dataset.damage || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE));
+                const maxDurability = parseInt(cannon.dataset.maxDurability || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY));
+                const fireRate = parseInt(cannon.dataset.fireRate || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800));
+                
+                // Verminder duurzaamheid met een kleinere hoeveelheid als het kanon geboost is
+                const durabilityLoss = cannon.dataset.boosted ? (cannon.dataset.type === 'double' ? 0.25 : 0.5) : (cannon.dataset.type === 'double' ? 0.5 : 1);
                 let durability = parseFloat(cannon.dataset.durability);
-                durability -= cannon.dataset.type === 'double' ? 0.5 : 1;
+                durability -= durabilityLoss;
                 cannon.dataset.durability = durability;
                 
                 // Update duurzaamheid bar en numerieke waarde
                 const hpFill = cannon.querySelector('.hp-fill');
                 const hpNumbers = cannon.querySelector('.hp-numbers');
-                const maxDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
                 const percentage = (durability / maxDurability) * 100;
                 
                 hpFill.style.width = percentage + '%';
-                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`;
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Gebruik maxDurability uit dataset
                 
                 // Verander kleur gebaseerd op duurzaamheid
                 if (percentage > 60) {
@@ -1955,7 +1960,8 @@
 
                 bullet.addEventListener('animationend', () => {
                     if (target.isConnected) {
-                        let enemyHealth = parseInt(target.dataset.health) - (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE);
+                        // Gebruik de gebooste damage
+                        let enemyHealth = parseInt(target.dataset.health) - damage;
                         target.dataset.health = enemyHealth;
                         
                         // Update vijand HP bar met numerieke waarde
@@ -1990,12 +1996,12 @@
                     bullet.remove();
                 });
 
-                // Update de cooldown timer
+                // Gebruik de gebooste fire rate
                 setTimeout(() => {
                     if (cannon.isConnected) {
                         cannon.canShoot = true;
                     }
-                }, cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800);
+                }, fireRate);
             }
 
             // Start het interval en sla de interval ID op op het cannon object
@@ -2025,6 +2031,48 @@
             // Reset trivia vragen na een wave
             localStorage.setItem('triviaQuestionsAsked', '0');
             updateTriviaBonusButton();
+            
+            // Reset alle gebooste kanonnen naar originele stats
+            document.querySelectorAll('.placed-cannon, .placed-double-cannon').forEach(cannon => {
+                if (cannon.dataset.boosted === 'true') {
+                    // Bereken originele waardes
+                    const isDouble = cannon.dataset.type === 'double';
+                    const originalDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+                    const originalDamage = isDouble ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
+                    const originalFireRate = isDouble ? DOUBLE_CANNON_FIRE_RATE : 800;
+                    
+                    // Bereken proportionele duurzaamheid
+                    const currentDurability = parseFloat(cannon.dataset.durability);
+                    const maxDurability = parseFloat(cannon.dataset.maxDurability);
+                    const durabilityPercentage = currentDurability / maxDurability;
+                    const newDurability = Math.ceil(durabilityPercentage * originalDurability);
+                    
+                    // Reset stats
+                    cannon.dataset.maxDurability = originalDurability;
+                    cannon.dataset.durability = newDurability;
+                    cannon.dataset.damage = originalDamage;
+                    cannon.dataset.fireRate = originalFireRate;
+                    cannon.dataset.boosted = 'false';
+                    
+                    // Update HP bar en numerieke waarde
+                    const hpNumbers = cannon.querySelector('.hp-numbers');
+                    hpNumbers.textContent = `${newDurability}/${originalDurability}`;
+                    
+                    // Update HP bar percentage
+                    const hpFill = cannon.querySelector('.hp-fill');
+                    const percentage = (newDurability / originalDurability) * 100;
+                    hpFill.style.width = percentage + '%';
+                    
+                    // Update HP bar kleur
+                    if (percentage > 60) {
+                        hpFill.style.backgroundColor = '#2ecc71';
+                    } else if (percentage > 30) {
+                        hpFill.style.backgroundColor = '#f1c40f';
+                    } else {
+                        hpFill.style.backgroundColor = '#e74c3c';
+                    }
+                }
+            });
             
                 currentWave++;
                 updateWaveNumber();
@@ -2232,7 +2280,17 @@
             cannon.style.left = brokenCannon.style.left;
             cannon.style.top = brokenCannon.style.top;
             cannon.style.transform = brokenCannon.style.transform;
-            cannon.dataset.durability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            
+            // Sla alle stats op in de dataset
+            const baseDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            const baseDamage = isDouble ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
+            const baseFireRate = isDouble ? DOUBLE_CANNON_FIRE_RATE : 800;
+            
+            // Sla de gebooste waardes op
+            cannon.dataset.maxDurability = baseDurability * BOOST_MULTIPLIER;
+            cannon.dataset.durability = baseDurability * BOOST_MULTIPLIER;
+            cannon.dataset.damage = baseDamage * BOOST_MULTIPLIER;
+            cannon.dataset.fireRate = baseFireRate / BOOST_MULTIPLIER;
             cannon.dataset.type = isDouble ? 'double' : 'single';
             cannon.canShoot = true;
 
@@ -2243,17 +2301,16 @@
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
             
-            // Voeg numerieke waarde toe
+            // Voeg numerieke waarde toe met gebooste waardes
             const hpNumbers = document.createElement('div');
             hpNumbers.className = 'hp-numbers';
-            const maxDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
-            hpNumbers.textContent = `${maxDurability}/${maxDurability}`;
+            hpNumbers.textContent = `${cannon.dataset.durability}/${cannon.dataset.maxDurability}`;
             
             hpBar.appendChild(hpFill);
             hpBar.appendChild(hpNumbers);
             cannon.appendChild(hpBar);
 
-            // Rest van de code blijft hetzelfde...
+            // ... rest van de code blijft hetzelfde
 
             // Voeg barrel toe
             if (isDouble) {
@@ -2686,7 +2743,6 @@
         function buyCannonBoost() {
             if (playerCoins < BOOST_COST) return;
             
-            // Verzamel alle actieve kanonnen
             const cannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (cannons.length === 0) {
                 showWarningTooltip('Er zijn geen kanonnen om te boosten!');
@@ -2695,21 +2751,24 @@
             
             updateCoins(-BOOST_COST);
             
-            // Boost alle kanonnen
             cannons.forEach(cannon => {
-                // Boost damage
-                const currentDamage = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
-                cannon.dataset.damage = Math.floor(currentDamage * BOOST_MULTIPLIER);
+                // Markeer het kanon als geboost
+                cannon.dataset.boosted = 'true';
                 
-                // Boost durability
-                const maxDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
-                const currentDurability = parseFloat(cannon.dataset.durability);
-                const newMaxDurability = Math.floor(maxDurability * BOOST_MULTIPLIER);
-                cannon.dataset.durability = Math.floor(currentDurability * BOOST_MULTIPLIER);
+                // Bereken en sla de gebooste waardes op
+                const baseDurability = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+                const baseDamage = cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
+                const baseFireRate = cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800;
                 
-                // Boost fire rate (verlaag de interval tijd)
-                const currentFireRate = cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800;
-                cannon.dataset.fireRate = Math.floor(currentFireRate / BOOST_MULTIPLIER);
+                // Sla de gebooste waardes op in de dataset
+                cannon.dataset.maxDurability = baseDurability * BOOST_MULTIPLIER;
+                cannon.dataset.durability = baseDurability * BOOST_MULTIPLIER;
+                cannon.dataset.damage = baseDamage * BOOST_MULTIPLIER;
+                cannon.dataset.fireRate = baseFireRate / BOOST_MULTIPLIER;
+
+                // Update direct de HP bar met de nieuwe waardes
+                const hpNumbers = cannon.querySelector('.hp-numbers');
+                hpNumbers.textContent = `${Math.ceil(cannon.dataset.durability)}/${cannon.dataset.maxDurability}`;
                 
                 // Visueel effect voor de boost
                 const boostEffect = document.createElement('div');
@@ -2768,7 +2827,7 @@
 
         // Update de coin display in de game UI
         document.querySelector('.coin-display').innerHTML = `
-            <span id="coinDisplay">150</span> 
+            <span id="coinDisplay">200</span> 
             <img src="assets/coin.png" alt="coins" class="coin-icon">
         `;
 
