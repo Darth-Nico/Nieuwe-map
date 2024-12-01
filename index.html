@@ -1056,6 +1056,60 @@
             justify-content: flex-start;
             gap: 4px; /* Ruimte tussen prijs en coin icon */
         }
+
+        /* Voeg deze CSS toe bij de andere animaties */
+        @keyframes explosion {
+            0% {
+                transform: scale(0.1);
+                opacity: 1;
+                background: #FFD700;
+            }
+            35% {
+                transform: scale(1);
+                opacity: 0.9;
+                background: #FF8C00;
+            }
+            70% {
+                transform: scale(1.2);
+                opacity: 0.5;
+                background: #FF4500;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+                background: #8B0000;
+            }
+        }
+
+        .explosion-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 103;
+        }
+
+        @keyframes debris {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) rotate(var(--rotation));
+                opacity: 0;
+            }
+        }
+
+        .debris {
+            position: absolute;
+            width: 6px;
+            height: 3px;
+            background: #404040;
+            border: 1px solid #000;
+            pointer-events: none;
+            z-index: 103;
+        }
     </style>
 </head>
 <body>
@@ -1934,8 +1988,13 @@
                 // Verwijder kanon als duurzaamheid op is en maak een kapot kanon
                 if (durability <= 0) {
                     clearInterval(cannon.checkInterval);
-                    cannon.remove(); // Verwijder het kanon direct
-                    return; // Stop verdere uitvoering van de shoot functie
+                    
+                    // Voeg explosie effect toe
+                    createExplosion(cannon);
+                    
+                    // Verwijder het kanon
+                    cannon.remove();
+                    return;
                 }
 
                 // Speel het schiet geluid af als geluid aan staat
@@ -2727,6 +2786,65 @@
             `;
             document.body.appendChild(modal);
             modal.brokenCannon = brokenCannon;
+        }
+
+        // Voeg deze nieuwe functie toe voor de explosie animatie
+        function createExplosion(cannon) {
+            const rect = cannon.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Maak explosie deeltjes
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'explosion-particle';
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                
+                // Voeg willekeurige vertraging toe voor meer dynamisch effect
+                const delay = Math.random() * 0.2;
+                particle.style.animation = `explosion 0.6s ease-out ${delay}s forwards`;
+                
+                document.body.appendChild(particle);
+                
+                // Verwijder het deeltje na de animatie
+                particle.addEventListener('animationend', () => particle.remove());
+            }
+            
+            // Maak rondvliegende brokstukken
+            for (let i = 0; i < 8; i++) {
+                const debris = document.createElement('div');
+                debris.className = 'debris';
+                debris.style.left = centerX + 'px';
+                debris.style.top = centerY + 'px';
+                
+                // Bereken willekeurige richting en rotatie
+                const angle = (Math.PI * 2 * i) / 8 + (Math.random() - 0.5);
+                const distance = 50 + Math.random() * 30;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance - (Math.random() * 20); // Voeg wat zwaartekracht toe
+                const rotation = Math.random() * 720 - 360; // Willekeurige rotatie tussen -360 en 360 graden
+                
+                debris.style.setProperty('--tx', `${tx}px`);
+                debris.style.setProperty('--ty', `${ty}px`);
+                debris.style.setProperty('--rotation', `${rotation}deg`);
+                
+                // Voeg willekeurige vertraging toe
+                const delay = Math.random() * 0.1;
+                debris.style.animation = `debris 0.8s ease-out ${delay}s forwards`;
+                
+                document.body.appendChild(debris);
+                
+                // Verwijder het brokstuk na de animatie
+                debris.addEventListener('animationend', () => debris.remove());
+            }
+            
+            // Speel een explosie geluid af als geluid aan staat
+            if (soundEnabled) {
+                const explosion = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAZAAAAhg==');
+                explosion.volume = 0.3;
+                explosion.play().catch(error => console.log("Audio afspelen mislukt:", error));
+            }
         }
     </script>
 </body>
