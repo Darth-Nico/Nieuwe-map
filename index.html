@@ -245,6 +245,12 @@
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
             border: none;
+            animation: grassWave 8s ease-in-out infinite;
+        }
+
+        @keyframes grassWave {
+            0%, 100% { background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+            50% { background-position: 2px 2px, 2px 12px, 12px -8px, -8px 2px; }
         }
 
         /* Update de path styling */
@@ -296,7 +302,6 @@
                 inset 0 -2px 5px rgba(255, 255, 255, 0.1);
         }
 
-        /* Voeg deze class toe voor de stenen textuur op de hoeken */
         .path-curve::before {
             content: '';
             position: absolute;
@@ -311,7 +316,6 @@
             pointer-events: none;
         }
 
-        /* Voeg deze class toe voor de stenen randen */
         .path::after, .path-curve::after {
             content: '';
             position: absolute;
@@ -326,17 +330,6 @@
             );
             pointer-events: none;
             z-index: 1;
-        }
-
-        /* Voeg schaduw toe aan het pad */
-        .path, .path-curve {
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Voeg een subtiele animatie toe aan het gras */
-        @keyframes grassWave {
-            0%, 100% { background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
-            50% { background-position: 2px 2px, 2px 12px, 12px -8px, -8px 2px; }
         }
 
         .game-map {
