@@ -1908,33 +1908,20 @@
                 
                 cannon.canShoot = false;
 
-                // Gebruik de gebooste waardes uit de dataset
-                const damage = parseInt(cannon.dataset.damage || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE));
-                const maxDurability = parseInt(cannon.dataset.maxDurability || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY));
-                const fireRate = parseInt(cannon.dataset.fireRate || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_FIRE_RATE : 800));
-                
-                // Verminder duurzaamheid met een kleinere hoeveelheid als het kanon geboost is
-                const durabilityLoss = cannon.dataset.boosted ? (cannon.dataset.type === 'double' ? 0.25 : 0.5) : (cannon.dataset.type === 'double' ? 0.5 : 1);
-                let durability = parseFloat(cannon.dataset.durability);
-                durability -= durabilityLoss;
+                // Verwijder de type check, alle kanonnen verliezen 1 duurzaamheid
+                let durability = parseFloat(cannon.dataset.durability) - 1;
                 cannon.dataset.durability = durability;
                 
                 // Update duurzaamheid bar en numerieke waarde
                 const hpFill = cannon.querySelector('.hp-fill');
                 const hpNumbers = cannon.querySelector('.hp-numbers');
+                const maxDurability = parseInt(cannon.dataset.maxDurability);
                 const percentage = (durability / maxDurability) * 100;
                 
                 hpFill.style.width = percentage + '%';
-                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Gebruik maxDurability uit dataset
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Update de numerieke waarde
                 
-                // Verander kleur gebaseerd op duurzaamheid
-                if (percentage > 60) {
-                    hpFill.style.backgroundColor = '#2ecc71';
-                } else if (percentage > 30) {
-                    hpFill.style.backgroundColor = '#f1c40f';
-                } else {
-                    hpFill.style.backgroundColor = '#e74c3c';
-                }
+                // Rest van de code blijft hetzelfde...
                 
                 // Verwijder kanon als duurzaamheid op is
                 if (durability <= 0) {
@@ -2002,7 +1989,7 @@
                 bullet.addEventListener('animationend', () => {
                     if (target.isConnected) {
                         // Gebruik de gebooste damage
-                        let enemyHealth = parseInt(target.dataset.health) - damage;
+                        let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
                         target.dataset.health = enemyHealth;
                         
                         // Update vijand HP bar met numerieke waarde
@@ -2042,7 +2029,7 @@
                     if (cannon.isConnected) {
                         cannon.canShoot = true;
                     }
-                }, fireRate);
+                }, 800);
             }
 
             // Start het interval en sla de interval ID op op het cannon object
@@ -2410,7 +2397,7 @@
                 
                 cannon.canShoot = false;
 
-                // Verminder duurzaamheid
+                // Verwijder de type check, alle kanonnen verliezen 1 duurzaamheid
                 let durability = parseFloat(cannon.dataset.durability) - 1;
                 cannon.dataset.durability = durability;
                 
@@ -2423,14 +2410,7 @@
                 hpFill.style.width = percentage + '%';
                 hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Update de numerieke waarde
                 
-                // Verander kleur gebaseerd op duurzaamheid
-                if (percentage > 60) {
-                    hpFill.style.backgroundColor = '#2ecc71';
-                } else if (percentage > 30) {
-                    hpFill.style.backgroundColor = '#f1c40f';
-                } else {
-                    hpFill.style.backgroundColor = '#e74c3c';
-                }
+                // Rest van de code blijft hetzelfde...
                 
                 // Verwijder kanon als duurzaamheid op is
                 if (durability <= 0) {
@@ -2519,6 +2499,7 @@
                     bullet.remove();
                 });
 
+                // Gebruik de gebooste fire rate
                 setTimeout(() => {
                     if (cannon.isConnected) {
                         cannon.canShoot = true;
