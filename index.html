@@ -1131,7 +1131,7 @@
         <!-- Game UI -->
         <div class="game-ui">
             <div class="coin-display" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.5rem;">
-                <span id="coinDisplay">200</span> 
+                <span id="coinDisplay">1000</span> 
                 <img src="assets/coin.png" alt="coins" class="coin-icon">
             </div>
             <div class="wave-info" style="color: #FFD700; margin-bottom: 1rem; font-size: 1.2rem;">
@@ -1343,7 +1343,7 @@
         const CANNON_DAMAGE = 4; // Schade van het kanon
 
         // Voeg deze constanten toe aan het begin van het script waar de andere constanten staan
-        const STARTING_COINS = 200;
+        const STARTING_COINS = 1000; // Veranderd van 200 naar 1000
         const CANNON_COST = 50;
         const COINS_PER_KILL = 15;
         const WAVE_BONUS = 50; // Voeg deze constante toe bij de andere constanten
@@ -1529,7 +1529,7 @@
 
         // Update de startWave functie om de nieuwe HP te gebruiken
         function startWave() {
-            if (isWaveInProgress) return;
+            if (isWaveInProgress || currentWave >= 5) return; // Check voor wave 5 of hoger
             
             const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (activeCannons.length === 0) {
@@ -1655,16 +1655,11 @@
             const waveButton = document.querySelector('.wave-button');
             waveButton.classList.remove('disabled');
             
-            if (currentWave <= 4 && kingHealth > 0) {
-                updateWaveStatus("Klaar om te starten");
-            } else {
+            // Verwijder de check voor wave 4 en de recursieve aanroep
                 if (kingHealth > 0) {
-                    showWaveCompletion(4);
-                    updateWaveStatus("Alle waves voltooid!");
-                }
+                updateWaveStatus("Klaar om te starten");
                 }
             }
-        
 
         let isShopOpen = false;
         let selectedTower = null;
@@ -2121,10 +2116,22 @@
                 }
             });
             
+            // Check voor einde spel (wave 4 voltooid)
+            if (currentWave === 4 && kingHealth > 0) {
+                currentWave++; // Verhoog naar 5
+                updateWaveNumber(); // Update de weergave van het wave nummer
+                showWaveCompletion(4);
+                updateWaveStatus("Gefeliciteerd! Je hebt gewonnen!");
+                // Disable de wave button na het winnen
+                const waveButton = document.querySelector('.wave-button');
+                waveButton.classList.add('disabled');
+                waveButton.onclick = null;
+            } else {
                 currentWave++;
                 updateWaveNumber();
                 showWaveCompletion(currentWave - 1);
             updateWaveStatus("Klaar om te starten");
+            }
         }
 
         // Initialiseer koning HP bar
@@ -2877,7 +2884,7 @@
 
         // Update de coin display in de game UI
         document.querySelector('.coin-display').innerHTML = `
-            <span id="coinDisplay">200</span> 
+            <span id="coinDisplay">1000</span> 
             <img src="assets/coin.png" alt="coins" class="coin-icon">
         `;
 
