@@ -1998,8 +1998,9 @@
 
                 bullet.addEventListener('animationend', () => {
                     if (target.isConnected) {
-                        // Gebruik de gebooste damage
-                        let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
+                        // Gebruik de damage waarde uit de dataset (die wordt geboost door de boost functie)
+                        const damage = parseInt(cannon.dataset.damage || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE));
+                        let enemyHealth = parseInt(target.dataset.health) - damage;
                         target.dataset.health = enemyHealth;
                         
                         // Update vijand HP bar met numerieke waarde
@@ -2485,7 +2486,9 @@
 
                 bullet.addEventListener('animationend', () => {
                     if (target.isConnected) {
-                        let enemyHealth = parseInt(target.dataset.health) - CANNON_DAMAGE;
+                        // Gebruik de damage waarde uit de dataset (die wordt geboost door de boost functie)
+                        const damage = parseInt(cannon.dataset.damage || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE));
+                        let enemyHealth = parseInt(target.dataset.health) - damage;
                         target.dataset.health = enemyHealth;
                         
                         // Update vijand HP bar met numerieke waarde
