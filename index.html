@@ -1529,7 +1529,7 @@
 
         // Update de startWave functie om de nieuwe HP te gebruiken
         function startWave() {
-            if (isWaveInProgress || currentWave >= 5) return; // Check voor wave 5 of hoger
+            if (isWaveInProgress) return;
             
             const activeCannons = document.querySelectorAll('.placed-cannon, .placed-double-cannon');
             if (activeCannons.length === 0) {
@@ -2116,22 +2116,11 @@
                 }
             });
             
-            // Check voor einde spel (wave 4 voltooid)
-            if (currentWave === 4 && kingHealth > 0) {
-                currentWave++; // Verhoog naar 5
-                updateWaveNumber(); // Update de weergave van het wave nummer
-                showWaveCompletion(4);
-                updateWaveStatus("Gefeliciteerd! Je hebt gewonnen!");
-                // Disable de wave button na het winnen
-                const waveButton = document.querySelector('.wave-button');
-                waveButton.classList.add('disabled');
-                waveButton.onclick = null;
-            } else {
+            // Verwijder de speciale behandeling voor wave 4
                 currentWave++;
                 updateWaveNumber();
                 showWaveCompletion(currentWave - 1);
             updateWaveStatus("Klaar om te starten");
-            }
         }
 
         // Initialiseer koning HP bar
