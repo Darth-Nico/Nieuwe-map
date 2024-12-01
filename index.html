@@ -2328,36 +2328,37 @@
             cannon.style.top = brokenCannon.style.top;
             cannon.style.transform = brokenCannon.style.transform;
             
-            // Sla alle stats op in de dataset
+            // Gebruik de basis waardes in plaats van gebooste waardes
             const baseDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
             const baseDamage = isDouble ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
             const baseFireRate = isDouble ? DOUBLE_CANNON_FIRE_RATE : 800;
             
-            // Sla de gebooste waardes op
-            cannon.dataset.maxDurability = baseDurability * BOOST_MULTIPLIER;
-            cannon.dataset.durability = baseDurability * BOOST_MULTIPLIER;
-            cannon.dataset.damage = baseDamage * BOOST_MULTIPLIER;
-            cannon.dataset.fireRate = baseFireRate / BOOST_MULTIPLIER;
+            // Sla de normale waardes op in de dataset
+            cannon.dataset.maxDurability = baseDurability;
+            cannon.dataset.durability = baseDurability;
+            cannon.dataset.damage = baseDamage;
+            cannon.dataset.fireRate = baseFireRate;
             cannon.dataset.type = isDouble ? 'double' : 'single';
+            cannon.dataset.boosted = 'false'; // Zet boosted status op false
             cannon.canShoot = true;
 
-            // Voeg HP bar toe
+            // Voeg HP bar toe met normale waardes
             const hpBar = document.createElement('div');
             hpBar.className = 'hp-bar';
             const hpFill = document.createElement('div');
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
             
-            // Voeg numerieke waarde toe met gebooste waardes
+            // Voeg numerieke waarde toe met normale waardes
             const hpNumbers = document.createElement('div');
             hpNumbers.className = 'hp-numbers';
-            hpNumbers.textContent = `${cannon.dataset.durability}/${cannon.dataset.maxDurability}`;
+            hpNumbers.textContent = `${baseDurability}/${baseDurability}`;
             
             hpBar.appendChild(hpFill);
             hpBar.appendChild(hpNumbers);
             cannon.appendChild(hpBar);
 
-            // ... rest van de code blijft hetzelfde
+            // ... rest van de code blijft hetzelfde ...
 
             // Voeg barrel toe
             if (isDouble) {
