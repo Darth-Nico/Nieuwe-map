@@ -2415,13 +2415,17 @@
                 cannon.canShoot = false;
 
                 // Verminder duurzaamheid
-                let durability = parseInt(cannon.dataset.durability) - 1;
+                let durability = parseFloat(cannon.dataset.durability) - 1;
                 cannon.dataset.durability = durability;
                 
-                // Update duurzaamheid bar
+                // Update duurzaamheid bar en numerieke waarde
                 const hpFill = cannon.querySelector('.hp-fill');
-                const percentage = (durability / CANNON_DURABILITY) * 100;
+                const hpNumbers = cannon.querySelector('.hp-numbers');
+                const maxDurability = parseInt(cannon.dataset.maxDurability);
+                const percentage = (durability / maxDurability) * 100;
+                
                 hpFill.style.width = percentage + '%';
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Update de numerieke waarde
                 
                 // Verander kleur gebaseerd op duurzaamheid
                 if (percentage > 60) {
