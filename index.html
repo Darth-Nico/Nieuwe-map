@@ -924,9 +924,31 @@
             cursor: pointer;
             display: none;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
             z-index: 101;
             transition: transform 0.1s ease, opacity 0.3s ease;
+            min-width: 200px;
+        }
+
+        .bonus-text {
+            color: #FFD700;
+            font-family: 'PixelFont', monospace;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.2rem;
+        }
+
+        .bonus-title {
+            font-size: 1rem;
+            color: #FFD700;
+        }
+
+        .bonus-subtitle {
+            font-size: 0.7rem;
+            color: #FFA500;
+            opacity: 0.8;
         }
 
         /* Voeg deze nieuwe CSS toe voor de disabled state */
@@ -1364,6 +1386,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Update de bonus coin button HTML -->
+    <button class="bonus-coin-button" onclick="showTriviaQuestion()">
+        <span style="color: #FFD700; font-size: 1.5rem;">●</span>
+        <div class="bonus-text">
+            <div class="bonus-title">Trivia Vraag</div>
+            <div class="bonus-subtitle">Beantwoord voor +10 munten!</div>
+        </div>
+    </button>
 
     <!-- Voeg dit toe aan de game-view div -->
     <button class="bonus-coin-button" onclick="showTriviaQuestion()">
