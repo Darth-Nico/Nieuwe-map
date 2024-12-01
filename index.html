@@ -1801,8 +1801,10 @@
             cannon.style.left = (x - 20) + 'px';
             cannon.style.top = (y - 10) + 'px';
             
-            // Set durability based on type
-            cannon.dataset.durability = selectedTower === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            // Stel de initiële waarden correct in
+            const baseDurability = selectedTower === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
+            cannon.dataset.maxDurability = baseDurability.toString(); // Zorg ervoor dat het een string is
+            cannon.dataset.durability = baseDurability.toString(); // Zorg ervoor dat het een string is
             cannon.dataset.type = selectedTower;
 
             // Add HP bar
@@ -1812,11 +1814,10 @@
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
             
-            // Voeg numerieke waarde toe
+            // Voeg numerieke waarde toe met correcte initiële waarden
             const hpNumbers = document.createElement('div');
             hpNumbers.className = 'hp-numbers';
-            const maxDurability = selectedTower === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
-            hpNumbers.textContent = `${maxDurability}/${maxDurability}`;
+            hpNumbers.textContent = `${baseDurability}/${baseDurability}`;
             
             hpBar.appendChild(hpFill);
             hpBar.appendChild(hpNumbers);
@@ -1908,7 +1909,7 @@
                 
                 cannon.canShoot = false;
 
-                // Verwijder de type check, alle kanonnen verliezen 1 duurzaamheid
+                // Verminder duurzaamheid
                 let durability = parseFloat(cannon.dataset.durability) - 1;
                 cannon.dataset.durability = durability;
                 
@@ -1919,7 +1920,16 @@
                 const percentage = (durability / maxDurability) * 100;
                 
                 hpFill.style.width = percentage + '%';
-                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Update de numerieke waarde
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`;
+                
+                // Verander kleur gebaseerd op duurzaamheid
+                if (percentage > 60) {
+                    hpFill.style.backgroundColor = '#2ecc71';
+                } else if (percentage > 30) {
+                    hpFill.style.backgroundColor = '#f1c40f';
+                } else {
+                    hpFill.style.backgroundColor = '#e74c3c';
+                }
                 
                 // Rest van de code blijft hetzelfde...
                 
@@ -2397,18 +2407,29 @@
                 
                 cannon.canShoot = false;
 
-                // Verwijder de type check, alle kanonnen verliezen 1 duurzaamheid
-                let durability = parseFloat(cannon.dataset.durability) - 1;
+                // Zorg ervoor dat we geldige getallen hebben
+                let durability = Math.max(0, parseFloat(cannon.dataset.durability || "0") - 1);
+                const maxDurability = parseInt(cannon.dataset.maxDurability || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY));
+                
+                // Update de dataset met de nieuwe durability
                 cannon.dataset.durability = durability;
                 
                 // Update duurzaamheid bar en numerieke waarde
                 const hpFill = cannon.querySelector('.hp-fill');
                 const hpNumbers = cannon.querySelector('.hp-numbers');
-                const maxDurability = parseInt(cannon.dataset.maxDurability);
                 const percentage = (durability / maxDurability) * 100;
                 
                 hpFill.style.width = percentage + '%';
-                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`; // Update de numerieke waarde
+                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`;
+                
+                // Verander kleur gebaseerd op duurzaamheid
+                if (percentage > 60) {
+                    hpFill.style.backgroundColor = '#2ecc71';
+                } else if (percentage > 30) {
+                    hpFill.style.backgroundColor = '#f1c40f';
+                } else {
+                    hpFill.style.backgroundColor = '#e74c3c';
+                }
                 
                 // Rest van de code blijft hetzelfde...
                 
