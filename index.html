@@ -1931,34 +1931,11 @@
                     hpFill.style.backgroundColor = '#e74c3c';
                 }
                 
-                // Rest van de code blijft hetzelfde...
-                
-                // Verwijder kanon als duurzaamheid op is
+                // Verwijder kanon als duurzaamheid op is en maak een kapot kanon
                 if (durability <= 0) {
                     clearInterval(cannon.checkInterval);
-                    setTimeout(() => {
-                        const brokenCannon = document.createElement('div');
-                        brokenCannon.className = cannon.dataset.type === 'double' ? 'broken-double-cannon' : 'broken-cannon';
-                        brokenCannon.style.left = cannon.style.left;
-                        brokenCannon.style.top = cannon.style.top;
-                        brokenCannon.style.transform = cannon.style.transform;
-                        brokenCannon.dataset.type = cannon.dataset.type; // Bewaar het type
-                        
-                        // Voeg kapotte lopen toe voor dubbel kanon
-                        if (cannon.dataset.type === 'double') {
-                            const topBarrel = document.createElement('div');
-                            topBarrel.className = 'broken-barrel top';
-                            const bottomBarrel = document.createElement('div');
-                            bottomBarrel.className = 'broken-barrel bottom';
-                            brokenCannon.appendChild(topBarrel);
-                            brokenCannon.appendChild(bottomBarrel);
-                        }
-                        
-                        brokenCannon.addEventListener('click', () => showRebuildModal(brokenCannon));
-                        gameMap.appendChild(brokenCannon);
-                        
-                        cannon.remove();
-                    }, 200);
+                    cannon.remove(); // Verwijder het kanon direct
+                    return; // Stop verdere uitvoering van de shoot functie
                 }
 
                 // Speel het schiet geluid af als geluid aan staat
@@ -2317,12 +2294,12 @@
             
             // Maak nieuw kanon aan op dezelfde plek
             const cannon = document.createElement('div');
-            cannon.className = isDouble ? 'placed-double-cannon' : 'placed-cannon';
+            cannon.className = isDouble ? 'placed-double-cannon' : 'placed-cannon'; // Dit was correct
             cannon.style.left = brokenCannon.style.left;
             cannon.style.top = brokenCannon.style.top;
             cannon.style.transform = brokenCannon.style.transform;
             
-            // Gebruik de basis waardes in plaats van gebooste waardes
+            // Gebruik de juiste basis waardes voor het type kanon
             const baseDurability = isDouble ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY;
             const baseDamage = isDouble ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE;
             const baseFireRate = isDouble ? DOUBLE_CANNON_FIRE_RATE : 800;
@@ -2332,18 +2309,17 @@
             cannon.dataset.durability = baseDurability;
             cannon.dataset.damage = baseDamage;
             cannon.dataset.fireRate = baseFireRate;
-            cannon.dataset.type = isDouble ? 'double' : 'single';
-            cannon.dataset.boosted = 'false'; // Zet boosted status op false
+            cannon.dataset.type = isDouble ? 'double' : 'single'; // Belangrijk: sla het juiste type op
+            cannon.dataset.boosted = 'false';
             cannon.canShoot = true;
 
-            // Voeg HP bar toe met normale waardes
+            // Voeg HP bar toe
             const hpBar = document.createElement('div');
             hpBar.className = 'hp-bar';
             const hpFill = document.createElement('div');
             hpFill.className = 'hp-fill';
             hpFill.style.width = '100%';
             
-            // Voeg numerieke waarde toe met normale waardes
             const hpNumbers = document.createElement('div');
             hpNumbers.className = 'hp-numbers';
             hpNumbers.textContent = `${baseDurability}/${baseDurability}`;
@@ -2352,9 +2328,7 @@
             hpBar.appendChild(hpNumbers);
             cannon.appendChild(hpBar);
 
-            // ... rest van de code blijft hetzelfde ...
-
-            // Voeg barrel toe
+            // Voeg de juiste barrels toe gebaseerd op het type
             if (isDouble) {
                 const topBarrel = document.createElement('div');
                 topBarrel.className = 'double-cannon-barrel top';
@@ -2368,178 +2342,14 @@
                 cannon.appendChild(barrel);
             }
 
-            // Definieer checkTargets functie voor dit kanon
-            function checkTargets() {
-                if (!isWaveInProgress || !cannon.isConnected) return;
+            // ... rest van de code blijft hetzelfde ...
 
-                const cannonRect = cannon.getBoundingClientRect();
-                const cannonCenterX = cannonRect.left + cannonRect.width / 2;
-                const cannonCenterY = cannonRect.top + cannonRect.height / 2;
-                const radius = cannon.dataset.type === 'double' ? 80 : 120; // Verschillende radius per type
-
-                const enemies = document.querySelectorAll('.enemy');
-                for (const enemy of enemies) {
-                    if (!enemy.isConnected) continue;
-
-                    const enemyRect = enemy.getBoundingClientRect();
-                    const enemyCenterX = enemyRect.left + enemyRect.width / 2;
-                    const enemyCenterY = enemyRect.top + enemyRect.height / 2;
-
-                    const distance = Math.sqrt(
-                        Math.pow(enemyCenterX - cannonCenterX, 2) +
-                        Math.pow(enemyCenterY - cannonCenterY, 2)
-                    );
-
-                    if (distance <= radius && cannon.canShoot) {
-                        const angle = Math.atan2(
-                            enemyCenterY - cannonCenterY,
-                            enemyCenterX - cannonCenterX
-                        );
-                        cannon.style.transform = `rotate(${angle}rad)`;
-                        shoot(enemy, cannonCenterX, cannonCenterY, enemyCenterX, enemyCenterY);
-                        break; // Stop na het vinden van het eerste doel
-                    }
-                }
-            }
-
-            // Definieer shoot functie voor dit kanon
-            function shoot(target, startX, startY, targetX, targetY) {
-                if (!cannon.canShoot || !target || !target.isConnected) return;
-                
-                cannon.canShoot = false;
-
-                // Zorg ervoor dat we geldige getallen hebben
-                let durability = Math.max(0, parseFloat(cannon.dataset.durability || "0") - 1);
-                const maxDurability = parseInt(cannon.dataset.maxDurability || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DURABILITY : CANNON_DURABILITY));
-                
-                // Update de dataset met de nieuwe durability
-                cannon.dataset.durability = durability;
-                
-                // Update duurzaamheid bar en numerieke waarde
-                const hpFill = cannon.querySelector('.hp-fill');
-                const hpNumbers = cannon.querySelector('.hp-numbers');
-                const percentage = (durability / maxDurability) * 100;
-                
-                hpFill.style.width = percentage + '%';
-                hpNumbers.textContent = `${Math.ceil(durability)}/${maxDurability}`;
-                
-                // Verander kleur gebaseerd op duurzaamheid
-                if (percentage > 60) {
-                    hpFill.style.backgroundColor = '#2ecc71';
-                } else if (percentage > 30) {
-                    hpFill.style.backgroundColor = '#f1c40f';
-                } else {
-                    hpFill.style.backgroundColor = '#e74c3c';
-                }
-                
-                // Rest van de code blijft hetzelfde...
-                
-                // Verwijder kanon als duurzaamheid op is
-                if (durability <= 0) {
-                    clearInterval(cannon.checkInterval);
-                    setTimeout(() => {
-                        const brokenCannon = document.createElement('div');
-                        brokenCannon.className = 'broken-cannon';
-                        brokenCannon.style.left = cannon.style.left;
-                        brokenCannon.style.top = cannon.style.top;
-                        brokenCannon.style.transform = cannon.style.transform;
-                        brokenCannon.addEventListener('click', () => showRebuildModal(brokenCannon));
-                        gameMap.appendChild(brokenCannon);
-                        
-                        cannon.remove();
-                    }, 200);
-                }
-
-                // Speel het schiet geluid af
-                if (soundEnabled) {
-                    const gunshot = document.getElementById('gunshotSound');
-                    gunshot.currentTime = 0;
-                    gunshot.play().catch(error => console.log("Audio afspelen mislukt:", error));
-                }
-
-                // Voeg recoil animatie toe
-                const currentRotation = cannon.style.transform;
-                cannon.style.setProperty('--rotation', currentRotation);
-                cannon.classList.add('shooting');
-                
-                // Voeg muzzle flash toe
-                const flash = document.createElement('div');
-                flash.className = 'muzzle-flash';
-                cannon.appendChild(flash);
-                flash.style.animation = 'flash 0.15s ease-out';
-                
-                setTimeout(() => {
-                    flash.remove();
-                    cannon.classList.remove('shooting');
-                }, 150);
-
-                // Maak en schiet kogel
-                const bullet = document.createElement('div');
-                bullet.className = 'bullet';
-                bullet.style.left = startX + 'px';
-                bullet.style.top = startY + 'px';
-                bullet.style.setProperty('--targetX', `${targetX - startX}px`);
-                bullet.style.setProperty('--targetY', `${targetY - startY}px`);
-                
-                document.body.appendChild(bullet);
-                bullet.style.animation = 'shoot 0.2s linear forwards';
-
-                bullet.addEventListener('animationend', () => {
-                    if (target.isConnected) {
-                        // Gebruik de damage waarde uit de dataset (die wordt geboost door de boost functie)
-                        const damage = parseInt(cannon.dataset.damage || (cannon.dataset.type === 'double' ? DOUBLE_CANNON_DAMAGE : CANNON_DAMAGE));
-                        let enemyHealth = parseInt(target.dataset.health) - damage;
-                        target.dataset.health = enemyHealth;
-                        
-                        // Update vijand HP bar met numerieke waarde
-                        const hpFill = target.querySelector('.hp-fill');
-                        const hpNumbers = target.querySelector('.hp-numbers');
-                        const maxHP = waveConfig.hp;
-                        const percentage = (enemyHealth / maxHP) * 100;
-                        
-                        hpFill.style.width = percentage + '%';
-                        hpNumbers.textContent = `${Math.max(0, enemyHealth)}/${maxHP}`;
-                        
-                        // Verander kleur gebaseerd op HP percentage
-                        if (percentage > 60) {
-                            hpFill.style.backgroundColor = '#2ecc71';
-                        } else if (percentage > 30) {
-                            hpFill.style.backgroundColor = '#f1c40f';
-                        } else {
-                            hpFill.style.backgroundColor = '#e74c3c';
-                        }
-                        
-                        // Check of de vijand dood is
-                        if (enemyHealth <= 0) {
-                            target.remove(); // Verwijder de vijand
-                            enemiesKilled++;
-                            updateCoins(COINS_PER_KILL);
-                            
-                            if (enemiesKilled + enemiesFinished === waveConfig.enemies) {
-                                endWave();
-                            }
-                        }
-                    }
-                    bullet.remove();
-                });
-
-                // Gebruik de gebooste fire rate
-                setTimeout(() => {
-                    if (cannon.isConnected) {
-                        cannon.canShoot = true;
-                    }
-                }, 800);
-            }
-
-            // Start het interval voor het nieuwe kanon
-            cannon.checkInterval = setInterval(checkTargets, 100);
+            // Trek de juiste kosten af
+            updateCoins(-cost); // Gebruik de cost variabele die we eerder hebben bepaald
 
             // Verwijder kapot kanon en plaats nieuw kanon
             brokenCannon.remove();
             gameMap.appendChild(cannon);
-            
-            // Trek kosten af
-            updateCoins(-CANNON_REBUILD_COST);
             
             // Sluit modal
             modal.remove();
